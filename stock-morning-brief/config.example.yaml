@@ -1,0 +1,48 @@
+# ============================================================
+# 股票晨報 設定檔（複製成 config.yaml 後修改，或讓 AI 訪談後幫你產生）
+# Stock Morning Brief — config file
+# ============================================================
+
+# 要看的市場：tw（台股）/ us（美股）/ both（都要）
+# 決定大盤圖：tw → 台股加權K線；us → 美股四大指數；both → 兩張都畫
+market: both
+
+# 自選股清單（想追蹤幾檔就填幾檔）
+# market 填 tw 會自動加上 .TW；us 直接用美股代號
+# cost / shares 選填：想在健檢看到損益資訊才需要
+watchlist:
+  - symbol: "2330"
+    name: 台積電
+    market: tw
+  - symbol: "0050"
+    name: 元大台灣50
+    market: tw
+  - symbol: AAPL
+    name: Apple
+    market: us
+
+# 技術指標
+# kline：K線圖（必備）
+# macd：MACD 副圖（DIF 快線＋DEA 慢線＋柱狀）
+# ma：均線疊圖（MA5 / MA20 / MA60）
+indicators: [kline, macd]
+
+# 每天幾點推播（給排程器用；AI 初始設定時會照這個幫你建排程）
+notify_time: "08:00"
+
+# 報告與圖片存哪裡
+# local：存本機資料夾（預設，零依賴）
+# none：不存檔，只推 Telegram
+# gdrive：另外上傳 Google Drive（進階，需自行安裝並授權 gws CLI）
+storage: local
+archive_dir: ./archive
+
+# storage 為 gdrive 時才需要：
+# gdrive_folder_id: "你的雲端資料夾ID"
+# gws_path: "gws"
+
+# K 線顯示最近幾根日K（60 ≈ 3 個月）
+show_bars: 60
+
+# 漲跌顏色習慣：tw（紅漲綠跌）/ us（綠漲紅跌）
+color_convention: tw

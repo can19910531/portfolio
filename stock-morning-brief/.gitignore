@@ -1,0 +1,16 @@
+# 機密：Telegram token / chat_id
+.env
+
+# 個人設定與產出（每個使用者自己的）
+config.yaml
+archive/
+執行紀錄.log
+*.log
+.sent.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# 雜項
+~$*

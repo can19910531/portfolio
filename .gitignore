@@ -1,0 +1,19 @@
+# 機密
+.env
+
+# 各作品的個人設定與產出
+config.yaml
+archive/
+執行紀錄.log
+*.log
+.sent.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# 本機暫存（不進 repo）
+_old_standalone_git/
+
+# 雜項
+~$*
