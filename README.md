@@ -11,12 +11,24 @@ AI × 自動化的實作作品。每個資料夾是一個獨立作品，含完�
 
 ## 怎麼使用這些作品
 
+**最快的方式：把作品的 GitHub 連結貼給你的 AI。**
+
+```text
+幫我安裝並設定這個專案：<作品連結>
+請讀該 repo README 最下方的「給 AI 的安裝指南」，照著它逐題訪談我完成設定。
+```
+
+適用 Claude Code、Cursor 等能操作你電腦的 AI；用 ChatGPT／Claude 網頁版也行，
+它會改成「給你指令、你貼到終端機」的模式（指南裡有寫）。
+
+想自己動手也可以：
+
 ```bash
 git clone https://github.com/can19910531/portfolio.git
 cd portfolio/stock-morning-brief   # 進入想用的作品
 ```
 
-每個作品的 README 都有自己的快速開始；多數作品支援「叫你的 AI 讀 docs 裡的任務書」完成設定。
+每個作品的 README 前半段寫給人看（3 分鐘看完），後半段是寫給 AI 執行的安裝指南。
 
 ## License
 
