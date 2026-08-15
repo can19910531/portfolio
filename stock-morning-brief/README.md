@@ -13,12 +13,20 @@
 不用改程式碼、不用讀文件、不用懂 Python。開一個 Claude Code（或 Cursor 等能操作你電腦的 AI），貼上：
 
 ```text
-幫我安裝並設定這個專案：
-https://github.com/can19910531/portfolio/tree/main/stock-morning-brief
+幫我安裝並設定股票晨報機器人：
 
-請讀該 repo README 最下方的「給 AI 的安裝指南」，照著它逐題訪談我，
-幫我把設定檔、Telegram 機器人和每日排程都建好。
+git clone https://github.com/can19910531/portfolio.git
+
+clone 完成後進入 portfolio/stock-morning-brief 資料夾，
+把 README.md 最下方的「給 AI 的安裝指南」和 docs/初始設定任務書.md
+兩份檔案完整讀過，再照著逐題訪談我，幫我把設定檔、Telegram 機器人
+和每日排程都建好。
 ```
+
+> 💡 **為什麼要它先 clone 再讀，而不是直接給網址？**
+> 直接丟 GitHub 網址的話，多數 AI 是用網頁抓取工具去讀，拿到的是**經過摘要的版本**，
+> 步驟會漏、細節會走樣（實測過，它連章節標題都會記錯）。讓它先下載到本機再讀檔案，
+> 拿到的才是完整原文。
 
 AI 會問你 8 個問題（**全部都是選擇題或講一句話就能回答**，像是「你要看台股還美股？」「想追蹤哪幾檔？」「每天幾點推給你？」），然後自動幫你裝好、發一則測試訊息確認有收到、建立每日排程。
 
@@ -27,14 +35,24 @@ AI 會問你 8 個問題（**全部都是選擇題或講一句話就能回答**�
 <details>
 <summary>📱 我用的是 ChatGPT / Claude 網頁版，沒有能操作電腦的 AI？</summary>
 
-也可以，只是 AI 沒辦法直接幫你動手，會改成「它給你指令、你貼到終端機」的模式。把上面那段話照樣貼給它，並多加一句：
+也可以，只是有兩個差別：AI 沒辦法直接幫你動手（改成「它給你指令、你貼到終端機」），而且**它沒辦法 clone，只能靠網頁抓取讀這份文件——那會拿到摘要版，容易漏步驟**。
+
+所以請改貼這段，讓它讀原始檔而不是網頁：
 
 ```text
-我用的是網頁版 AI，你沒辦法直接操作我的電腦。
+我要安裝一個股票晨報機器人。我用的是網頁版 AI，你沒辦法直接操作我的電腦，
 請一步一步給我指令，我貼到終端機執行後把結果回報給你。
+
+請先完整讀取這兩份原始檔（是純文字原始碼，不是網頁）：
+https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief/README.md
+https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief/docs/初始設定任務書.md
+
+讀完後照 README 最下方「給 AI 的安裝指南」逐題訪談我。
 ```
 
-README 最下方的指南裡有專門給網頁版 AI 的流程，它讀得到。
+如果它還是說讀不完整，最保險的做法：直接開啟上面第一個連結，全選複製，整份貼給它。
+
+
 
 </details>
 
@@ -194,6 +212,22 @@ License: MIT
 
 > **以下是寫給 AI 讀的執行指南，人類使用者可以略過。**
 > 如果你是 AI，而使用者請你安裝這個專案 —— 從這裡開始，照著做完即可。
+
+## ⚠️ 開始之前：先確認你拿到的是完整原文
+
+如果你是**透過網頁抓取工具**讀到這份文件的，你很可能拿到的是**經過摘要的版本**——
+實測過，摘要版會記錯章節標題、漏掉步驟細節。照著摘要版做會裝壞。
+
+開始訪談前，先確保你有完整原文，依你的能力擇一：
+
+1. **能執行指令** → `git clone https://github.com/can19910531/portfolio.git`，
+   然後讀本機的 `portfolio/stock-morning-brief/README.md` 與 `docs/初始設定任務書.md`
+2. **只能抓網頁** → 改讀 `raw.githubusercontent.com` 的原始檔（不是 github.com 網頁）：
+   `https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief/README.md`
+3. **兩者都不行** → 請使用者把 README 原文整份貼給你，不要憑摘要開始
+
+自我檢查：你應該要能看到「訪談（八題，一次一題）」這個小節，而且第 3 題是「新聞來源」
+並帶有 ⚠️ 標記。看不到就代表你手上的不是完整版，**先取得原文再繼續**。
 
 ## 你的任務
 
