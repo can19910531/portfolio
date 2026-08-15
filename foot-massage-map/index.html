@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>腳底按摩穴道對照</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="腳底按摩">
+<meta name="theme-color" content="#1F4D3A">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦶</text></svg>">
+<style>
+  :root{
+    --paper:#F4F2EA;
+    --pine:#1F4D3A;
+    --pine-soft:#3E6B55;
+    --skin:#F6D8BA;
+    --skin-line:#C98F5F;
+    --dot:#B5402E;
+    --ink:#2B2A24;
+    --card:#FFFDF7;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;
+    font-size:20px;
+    line-height:1.7;
+    touch-action:manipulation;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:20px 16px 40px;}
+
+  header{ text-align:center; margin-bottom:6px; }
+  .eyebrow{
+    display:inline-block;
+    color:var(--pine-soft);
+    font-size:16px;
+    letter-spacing:6px;
+    margin-bottom:4px;
+  }
+  h1{
+    margin:0 0 10px;
+    font-size:30px;
+    line-height:1.3;
+    color:var(--pine);
+    letter-spacing:2px;
+    text-wrap:balance;
+  }
+  .howto{
+    background:var(--card);
+    border:2px solid #E3DECC;
+    border-radius:14px;
+    padding:12px 16px;
+    font-size:20px;
+    margin:0 0 14px;
+  }
+  .howto b{color:var(--dot);}
+
+  /* ── 3D 區 ── */
+  .stage-box{
+    position:relative;
+    background:linear-gradient(#EFEBDD,#E6E0CE);
+    border:2px solid #E3DECC;
+    border-radius:18px;
+    overflow:hidden;
+  }
+  #stage{
+    width:100%;
+    height:460px;
+    display:block;
+    touch-action:none;
+    cursor:grab;
+  }
+  .stage-hint{
+    position:absolute;
+    top:10px; left:0; right:0;
+    text-align:center;
+    font-size:17px;
+    color:#6B675B;
+    pointer-events:none;
+  }
+  .stage-btns{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:10px;
+  }
+  .stage-btns button{
+    flex:1 1 45%;
+    min-height:56px;
+    border:2px solid #E3DECC;
+    border-radius:14px;
+    background:var(--card);
+    color:var(--pine);
+    font:inherit;
+    font-size:21px;
+    font-weight:700;
+    letter-spacing:2px;
+    cursor:pointer;
+  }
+  .stage-btns button:active{ background:#F0EADA; }
+  .webgl-fail{
+    display:none;
+    padding:20px;
+    font-size:19px;
+    color:#5C5849;
+  }
+
+  h2{
+    font-size:23px;
+    color:var(--pine);
+    margin:28px 0 12px;
+    letter-spacing:2px;
+    border-left:6px solid var(--pine);
+    padding-left:10px;
+    line-height:1.4;
+  }
+  h3.grp{
+    font-size:20px;
+    color:var(--pine-soft);
+    margin:18px 0 8px;
+    letter-spacing:2px;
+  }
+  .list{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .list button{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card);
+    border:2px solid #E3DECC;
+    border-radius:14px;
+    padding:12px 10px;
+    font:inherit;
+    font-size:19px;
+    color:var(--ink);
+    min-height:64px;
+    text-align:left;
+    cursor:pointer;
+    line-height:1.4;
+  }
+  .list button:active{ background:#F0EADA; }
+  .badge{
+    flex:0 0 auto;
+    width:44px; height:44px;
+    border-radius:50%;
+    background:var(--dot);
+    color:#fff;
+    font-size:20px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    letter-spacing:0;
+  }
+  .badge.two{ font-size:15px; }
+  .side-tag{
+    display:block;
+    font-size:15px;
+    color:#8A8574;
+  }
+
+  .tips-box{
+    margin-top:26px;
+    background:var(--card);
+    border:2px solid #E3DECC;
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .tips-box h2{ margin:6px 0 10px; }
+  .tips-box ul{ margin:6px 0; padding-left:24px; }
+  .tips-box li{ margin:6px 0; font-size:19px; }
+  .tips-warn{ color:var(--dot); font-weight:700; }
+  .src{ font-size:15px; color:#8A8574; margin-top:10px; }
+  .src a{ color:var(--pine-soft); }
+
+  .disclaimer{
+    margin-top:22px;
+    background:#EFE9D8;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:17px;
+    color:#5C5849;
+  }
+
+  /* ── 底部彈出視窗 ── */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(30,40,30,.55);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+    z-index:10;
+  }
+  .sheet{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--card);
+    border-radius:22px 22px 0 0;
+    max-height:86dvh;
+    transform:translateY(105%);
+    transition:transform .3s ease;
+    z-index:11;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 -8px 30px rgba(0,0,0,.25);
+  }
+  body.open .overlay{ opacity:1; pointer-events:auto; }
+  body.open .sheet{ transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){
+    .overlay,.sheet{ transition:none; }
+  }
+  .sheet-scroll{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:22px 20px 10px;
+  }
+  .sheet-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:6px;
+  }
+  .sheet-head .badge{ width:56px; height:56px; font-size:24px; }
+  .sheet-head .badge.two{ font-size:19px; }
+  .sheet-title{
+    font-size:27px;
+    font-weight:700;
+    color:var(--pine);
+    line-height:1.3;
+  }
+  .sheet-organ{
+    font-size:19px;
+    color:#6B675B;
+  }
+  .sec{ margin:16px 0; }
+  .sec-label{
+    display:inline-block;
+    background:var(--pine);
+    color:#fff;
+    font-size:17px;
+    letter-spacing:2px;
+    border-radius:8px;
+    padding:3px 12px;
+    margin-bottom:6px;
+  }
+  .sec-label.diet{ background:#8A6D2F; }
+  .sec-label.move{ background:#3E6B8A; }
+  .sec p{ margin:4px 0 0; font-size:21px; }
+  .close-bar{
+    padding:12px 20px calc(14px + env(safe-area-inset-bottom));
+    border-top:1px solid #E9E3D2;
+    background:var(--card);
+  }
+  .close-bar button{
+    width:100%;
+    min-height:58px;
+    border:none;
+    border-radius:14px;
+    background:var(--pine);
+    color:#fff;
+    font:inherit;
+    font-size:23px;
+    letter-spacing:6px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .close-bar button:active{ background:#173B2C; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">足部保健</span>
+    <h1>腳底按摩　穴道對照圖</h1>
+  </header>
+
+  <p class="howto">按摩時哪裡覺得<b>痠、痛</b>，就<b>點一下那個紅點</b>看說明。用一根手指<b>左右滑動</b>可以旋轉雙腳；按「<b>看腳背</b>」會自動翻面，腳背和腳跟側面也有穴道喔。</p>
+
+  <div class="stage-box">
+    <canvas id="stage"></canvas>
+    <div class="stage-hint">👉 手指按住畫面左右滑動，就能旋轉雙腳</div>
+    <div class="webgl-fail" id="webglFail">您的手機瀏覽器不支援 3D 顯示，請直接使用下面的「全部反射區一覽」點選查看。</div>
+  </div>
+  <div class="stage-btns">
+    <button id="zoomIn" type="button">放　大</button>
+    <button id="zoomOut" type="button">縮　小</button>
+    <button id="flipView" type="button">看腳背</button>
+    <button id="resetView" type="button">看腳底</button>
+  </div>
+
+  <h2>全部反射區一覽（點名稱也可以看說明）</h2>
+  <div id="list"></div>
+
+  <div class="tips-box">
+    <h2>按摩小叮嚀</h2>
+    <ul>
+      <li><b>最好的時機：</b>洗澡後或睡覺前，此時血液循環好、也幫助睡眠。</li>
+      <li><b>怎麼按：</b>用大拇指慢慢按壓，痠痠的就好，<span class="tips-warn">不要按到痛得受不了</span>。</li>
+      <li><b>多久按一次：</b>平常保養每個月2～3次就夠；比較不舒服時，一週1～2次。</li>
+      <li><span class="tips-warn">這些情況不適合按摩：</span>腳上有傷口或香港腳、很餓或剛吃飽、有嚴重心臟病、糖尿病、腎臟病、血栓或靜脈曲張、女性生理期或懷孕期間。</li>
+    </ul>
+    <div class="src">資料來源：<a href="https://health.businessweekly.com.tw/article/ARTL003012909" target="_blank" rel="noopener">良醫健康網</a>、衛福部民俗調理腳底按摩操作參考手冊</div>
+  </div>
+
+  <div class="disclaimer">
+    本工具內容為一般保健參考，反射區痠痛<b>不代表生病</b>。若身體持續不舒服、胸痛、呼吸困難，請盡快就醫，不要只靠按摩。
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-scroll">
+    <div class="sheet-head">
+      <div class="badge" id="mBadge">頭</div>
+      <div>
+        <div class="sheet-title" id="mTitle"></div>
+        <div class="sheet-organ" id="mOrgan"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <span class="sec-label">這是什麼</span>
+      <p id="mWhat"></p>
+    </div>
+    <div class="sec">
+      <span class="sec-label">按了痠痛，可能代表</span>
+      <p id="mPain"></p>
+    </div>
+    <div class="sec">
+      <span class="sec-label diet">飲食建議</span>
+      <p id="mFood"></p>
+    </div>
+    <div class="sec">
+      <span class="sec-label move">運動與生活建議</span>
+      <p id="mMove"></p>
+    </div>
+  </div>
+  <div class="close-bar">
+    <button id="closeBtn" type="button">關　閉</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script>
+/* ── 反射區資料（依衛福部民俗調理腳底按摩操作參考手冊、良醫健康網整理）──
+   座標系：單腳 0~200（橫）× 0~430（直），大拇趾在內側（x 小的那邊） */
+const GROUPS = [
+  { key:'toe',  title:'腳趾區（頭部與感官）' },
+  { key:'ball', title:'前腳掌（胸腔與肩頸）' },
+  { key:'mid',  title:'腳掌中央（消化與泌尿）' },
+  { key:'heel', title:'腳跟區（腸道末段與骨盆腔）' },
+  { key:'top',  title:'腳背區（按「看腳背」翻面查看）' },
+  { key:'side', title:'腳的內外側（脊椎、生殖與關節，左右旋轉腳可看到）' },
+];
+const POINTS = [
+  /* ── 腳趾區 ── */
+  { g:'toe', ch:'頭', name:'頭部（大腦）反射區', organ:'對應：頭部、大腦', feet:'both', x:46, y:54,
+    what:'位在大拇趾的趾腹，整個大拇趾對應我們的頭部和大腦。',
+    pain:'最近可能想事情想太多、睡不好，或常常頭暈、頭痛、精神不好。',
+    food:'可以多吃深海魚（鯖魚、鮭魚）、核桃、雞蛋，幫助頭腦。口味清淡一點，太鹹太油的少吃。',
+    move:'每天早晚散步二十分鐘，多動動手指（例如剝豆子、寫字），晚上早點睡，睡飽最重要。' },
+  { g:'toe', ch:'額', name:'前額（含鼻竇）反射區', organ:'對應：前額、鼻竇', feet:'both', x:99, y:34,
+    what:'五根腳趾的「趾尖」都對應前額和鼻竇，這個點畫在第二根腳趾做代表。按摩時，五根腳趾尖都可以用手指捏一捏。',
+    pain:'鼻子可能比較不舒服，例如容易鼻塞、流鼻水、有過敏，或前額覺得脹脹痛痛的。',
+    food:'多喝溫開水，天冷可以喝點薑茶讓身體暖和。冰的飲料少喝，有過敏的人生冷食物少吃。',
+    move:'每天把每根腳趾尖輕輕捏一捏、轉一轉。天冷或早晚出門戴口罩保暖，避免冷風直接吹到頭。' },
+  { g:'toe', ch:'頸', name:'頸部反射區', organ:'對應：脖子、頸椎周圍', feet:'both', x:56, y:98,
+    what:'位在大拇趾的根部，對應我們的脖子。',
+    pain:'脖子可能比較僵硬痠痛，常低頭看手機、看報紙，或睡姿不好的人特別明顯。',
+    food:'均衡飲食就可以，多喝溫開水幫助肌肉放鬆。',
+    move:'每天慢慢左右轉頭、上下點頭各十次（動作要慢）。洗澡後用熱毛巾敷後頸十分鐘。' },
+  { g:'toe', ch:'眼', name:'眼睛反射區', organ:'對應：兩眼', feet:'both', x:102, y:102,
+    what:'位在第二、第三根腳趾的根部。左腳對應右眼、右腳對應左眼。',
+    pain:'眼睛可能比較疲勞，例如看電視、看手機太久，或有老花、眼睛乾澀的情形。',
+    food:'多吃深綠色蔬菜（菠菜、地瓜葉）、胡蘿蔔、南瓜，可以泡枸杞菊花茶喝。',
+    move:'看電視每三十分鐘休息一下，看看遠方。用溫熱毛巾敷眼睛五分鐘，眼睛會很舒服。' },
+  { g:'toe', ch:'耳', name:'耳朵反射區', organ:'對應：兩耳', feet:'both', x:152, y:114,
+    what:'位在第四、第五根腳趾的根部。左腳對應右耳、右腳對應左耳。',
+    pain:'耳朵可能比較疲勞，例如有耳鳴、聽聲音比較不清楚的情形。',
+    food:'多吃黑芝麻、黑木耳、核桃這類黑色食物。咖啡、濃茶少喝一點。',
+    move:'常用手掌搓熱後蓋住耳朵、輕輕按摩耳朵周圍。聽收音機、電視音量不要開太大聲。' },
+
+  /* ── 前腳掌 ── */
+  { g:'ball', ch:'肩', name:'斜方肌（肩頸）反射區', organ:'對應：肩膀、後頸的大塊肌肉', feet:'both', x:126, y:138,
+    what:'位在眼睛、耳朵反射區下方的一條橫帶，對應肩膀到後頸的斜方肌。',
+    pain:'肩頸可能比較僵硬痠痛，常見於姿勢固定太久、提重物或容易緊張的人。',
+    food:'多喝溫開水，均衡飲食。鈣和鎂有幫助：牛奶、深綠色蔬菜、堅果適量吃。',
+    move:'每天聳肩再放下十次、雙手畫大圓十次。洗澡後熱敷肩頸十分鐘，效果很好。' },
+  { g:'ball', ch:'甲狀', name:'甲狀腺反射區', organ:'對應：甲狀腺（管新陳代謝）', feet:'both', x:68, y:142,
+    what:'位在腳掌內側、大拇趾球下方彎彎的一條區域，對應脖子前面的甲狀腺。',
+    pain:'新陳代謝可能比較不平衡，例如容易疲倦、特別怕冷或怕熱、體重變化明顯。',
+    food:'海帶、紫菜等含碘食物「適量」就好，不要天天大量吃。三餐均衡、定時。',
+    move:'作息規律、不熬夜。若發現脖子腫腫的、心悸或手抖，請就醫檢查。' },
+  { g:'ball', ch:'副甲', name:'副甲狀腺反射區', organ:'對應：副甲狀腺（管鈣質平衡）', feet:'both', x:38, y:128,
+    what:'位在腳掌內側、大拇趾關節旁的小點，對應副甲狀腺，管身體的鈣質平衡。',
+    pain:'鈣質平衡可能比較差，例如晚上容易腳抽筋、覺得骨頭比較沒力。',
+    food:'多補充鈣質：牛奶、小魚乾、豆腐、黑芝麻、深綠色蔬菜。',
+    move:'白天到戶外曬太陽十五分鐘幫助吸收鈣。扶著椅背慢慢蹲下站起來，練腿力顧骨頭。' },
+  { g:'ball', ch:'肺', name:'肺部反射區', organ:'對應：肺、支氣管', feet:'both', x:112, y:168,
+    what:'位在前腳掌（腳趾下方那一大片），像一條橫的帶子，對應肺和呼吸道。',
+    pain:'呼吸系統可能比較弱，例如容易咳嗽、有痰、爬樓梯容易喘。',
+    food:'多吃白色食物：水梨、白木耳、山藥、蜂蜜水。多喝溫開水，冰的少喝。',
+    move:'每天練習深呼吸：慢慢吸氣四秒、慢慢吐氣六秒，做十次。天氣好時出門快走，遠離二手菸。' },
+  { g:'ball', ch:'心', name:'心臟反射區', organ:'對應：心臟（只在左腳）', feet:'left', x:143, y:196,
+    what:'只有左腳有這個反射區，位在左腳前腳掌偏外側，對應我們的心臟。',
+    pain:'心臟可能比較累，例如容易心悸、胸悶、疲倦。若常常胸痛，請一定要就醫檢查。',
+    food:'少油、少鹽、少糖。多吃燕麥、深海魚、番茄、堅果（一天一小把就好）。',
+    move:'選溫和的運動：散步、甩手、太極拳。不要突然做激烈運動。在家定期量血壓並記下來。' },
+  { g:'ball', ch:'肝', name:'肝臟反射區', organ:'對應：肝臟（只在右腳）', feet:'right', x:143, y:192,
+    what:'只有右腳有這個反射區，位在右腳前腳掌偏外側，對應我們的肝臟。',
+    pain:'肝可能比較疲勞，例如常熬夜、有喝酒習慣、容易累、眼睛容易乾。',
+    food:'多吃綠色蔬菜（花椰菜、芥藍、菠菜）。酒盡量不喝，油炸物少吃。',
+    move:'晚上十一點前睡覺最養肝。白天多伸展身體、保持心情輕鬆，不要常常生悶氣。' },
+  { g:'ball', ch:'膽', name:'膽囊反射區', organ:'對應：膽囊（只在右腳）', feet:'right', x:126, y:224,
+    what:'只有右腳有這個反射區，位在肝臟反射區下方一點，對應幫助消化油脂的膽囊。',
+    pain:'油脂消化可能比較差，例如吃了油膩的東西後容易脹、不舒服。',
+    food:'油炸、肥肉少吃。早餐一定要吃——空腹太久，膽汁容易變濃稠。',
+    move:'三餐定時、飯後散步、維持適當體重，就是保養膽囊最好的方法。' },
+  { g:'ball', ch:'脾', name:'脾臟反射區', organ:'對應：脾臟（只在左腳）', feet:'left', x:142, y:242,
+    what:'只有左腳有這個反射區，位在心臟反射區的下方。中醫認為脾管消化吸收和體力。',
+    pain:'消化吸收可能比較弱，例如胃口不好、吃一點就飽、容易疲倦、手腳沒力。',
+    food:'多吃山藥、紅棗、小米粥、南瓜這類溫和好消化的食物。冰品、冷飲盡量避免。',
+    move:'吃飯後散步十五分鐘。每天用手掌繞著肚臍、順時針輕輕按摩肚子三十圈。' },
+
+  /* ── 腳掌中央 ── */
+  { g:'mid', ch:'胃', name:'胃部反射區', organ:'對應：胃', feet:'both', x:78, y:198,
+    what:'位在腳掌內側、大拇趾往下延伸的位置，對應我們的胃。',
+    pain:'胃可能比較辛苦，例如容易脹氣、胃口不好、吃飽不舒服。',
+    food:'三餐定時定量，細嚼慢嚥，每口飯多咬幾下。太辣、太冰、太硬的食物少吃。',
+    move:'吃飽後不要馬上躺下，先坐著休息，三十分鐘後出去慢慢散步。' },
+  { g:'mid', ch:'胰', name:'胰臟反射區', organ:'對應：胰臟（管血糖）', feet:'both', x:76, y:224,
+    what:'位在胃反射區的下方，對應胰臟，負責調節血糖、幫助消化。',
+    pain:'血糖調節可能比較辛苦，平常甜食吃比較多的人，這裡也常有感覺。',
+    food:'甜食、含糖飲料、白麵包白飯少一點，改吃糙米、全麥。三餐定量不暴食。',
+    move:'飯後散步二十分鐘，是幫助穩定血糖最簡單的方法。維持適當體重。' },
+  { g:'mid', ch:'十二', name:'十二指腸反射區', organ:'對應：十二指腸（胃的出口）', feet:'both', x:70, y:250,
+    what:'位在胰臟反射區下方，對應胃連接小腸的第一段——十二指腸。',
+    pain:'消化可能比較慢，例如空腹時上腹悶悶的、容易脹氣打嗝。',
+    food:'定時吃飯、細嚼慢嚥。太辣、太酸的食物和咖啡、濃茶少一點。',
+    move:'吃飯時放慢速度、心情放鬆，不要邊吃飯邊生氣或趕時間。' },
+  { g:'mid', ch:'腹', name:'腹腔神經叢反射區', organ:'對應：腹部神經網（壓力、情緒）', feet:'both', x:108, y:215,
+    what:'位在腳掌正中央、腎臟反射區周圍一片，對應肚子裡的神經網，和情緒壓力很有關係。',
+    pain:'最近壓力可能比較大、容易緊張煩躁，腸胃也常跟著鬧脾氣。',
+    food:'咖啡、濃茶少喝，改喝溫開水。晚餐清淡一點，睡前不要吃太飽。',
+    move:'每天做腹式深呼吸十次：吸氣時肚子鼓起、吐氣時慢慢消下去。聽聽輕音樂、多到戶外走走。' },
+  { g:'mid', ch:'腎上', name:'腎上腺反射區', organ:'對應：腎上腺（抗壓力、精神）', feet:'both', x:92, y:238,
+    what:'位在腎臟反射區的上方一點點，對應腎上腺，管身體的抗壓力和精神。',
+    pain:'可能比較累、壓力大、精神提不起來，或容易緊張心慌。',
+    food:'三餐均衡、少吃太鹹。多吃含維生素C的水果：芭樂、柳丁、奇異果。',
+    move:'規律睡眠最重要。白天適度活動、曬曬太陽，累了就休息，不要硬撐。' },
+  { g:'mid', ch:'腎', name:'腎臟反射區', organ:'對應：腎臟（湧泉穴附近）', feet:'both', x:102, y:264,
+    what:'位在腳掌正中央偏上，靠近有名的「湧泉穴」，對應腎臟，也和精神體力有關。',
+    pain:'可能是身體比較疲勞、體力變差、容易腰痠、晚上比較常起來上廁所。',
+    food:'白天適量喝水（不要等口渴才喝）、口味放淡少吃鹽。可吃黑豆、黑芝麻、核桃。',
+    move:'每天踮腳尖三十下、睡前用溫熱水泡腳十到十五分鐘，泡到微微出汗就好。' },
+  { g:'mid', ch:'輸尿', name:'輸尿管反射區', organ:'對應：腎臟通往膀胱的管子', feet:'both', x:80, y:296,
+    what:'從腎臟反射區斜斜往腳跟內側延伸的一條線，對應腎臟連到膀胱的輸尿管。',
+    pain:'排尿系統可能比較疲勞，水分可能喝得不夠。',
+    food:'白天平均地喝水，不要一次灌太多。含糖飲料少喝。',
+    move:'不要憋尿。按摩時可以從腳掌中央往腳跟內側方向慢慢推，順著輸尿管的方向。' },
+  { g:'mid', ch:'小腸', name:'小腸反射區', organ:'對應：小腸（吸收營養）', feet:'both', x:108, y:318,
+    what:'位在腳掌中下方一大片，對應負責吸收營養的小腸。',
+    pain:'吸收可能比較弱，例如吃得不少卻沒什麼體力，或容易軟便、拉肚子。',
+    food:'食物煮軟一點、吃溫熱的比較好消化。優酪乳、味噌湯這類發酵食物可以幫忙。',
+    move:'飯後散步十五分鐘，每天順時針按摩肚子，讓腸子動起來。' },
+  { g:'mid', ch:'橫結', name:'橫結腸反射區', organ:'對應：大腸（橫過肚子的一段）', feet:'both', x:126, y:288,
+    what:'大腸橫過肚子的那一段，反射區在腳掌中間像一條橫線，兩腳都有。',
+    pain:'腸道可能比較懶，例如容易便祕、脹氣、排便不順。',
+    food:'多吃高纖維食物：地瓜、木瓜、香蕉、燕麥、青菜，並且要喝足夠的水。',
+    move:'每天散步三十分鐘。早上起床先喝一杯溫開水，再順時針按摩肚子。' },
+  { g:'mid', ch:'升結', name:'升結腸反射區', organ:'對應：大腸前段（只在右腳）', feet:'right', x:150, y:302,
+    what:'只有右腳有，位在腳掌外側直直的一條，對應大腸往上走的前段。',
+    pain:'腸道前段蠕動可能比較慢，容易脹氣、便祕。',
+    food:'高纖蔬果加足夠的水，纖維才能發揮作用。優酪乳也有幫助。',
+    move:'按摩肚子時記得「順時針」——就是順著大腸走的方向，從右下往上、往左推。' },
+  { g:'mid', ch:'降結', name:'降結腸反射區', organ:'對應：大腸後段（只在左腳）', feet:'left', x:150, y:302,
+    what:'只有左腳有，位在腳掌外側直直的一條，對應大腸往下走的後段。',
+    pain:'腸道後段可能比較慢，糞便在這裡待太久就容易乾硬、便祕。',
+    food:'多喝水、多吃蔬菜水果。木瓜、火龍果、奇異果對排便特別有幫助。',
+    move:'養成每天固定時間上廁所的習慣（例如早餐後），有便意不要忍。' },
+
+  /* ── 腳跟區 ── */
+  { g:'heel', ch:'迴盲', name:'迴盲瓣反射區', organ:'對應：小腸接大腸的門（只在右腳）', feet:'right', x:134, y:332,
+    what:'只有右腳有，對應小腸和大腸交接處的「門」，管食物殘渣通過的速度。',
+    pain:'腸道交接處可能比較緊張，例如脹氣、咕嚕咕嚕叫、排便不規律。',
+    food:'三餐定時，讓腸子有固定的節奏。發酵食物（優酪乳、味噌）可以幫忙。',
+    move:'飯後散步、順時針揉肚子。生活作息規律，腸子也會跟著規律。' },
+  { g:'heel', ch:'盲腸', name:'盲腸（闌尾）反射區', organ:'對應：大腸起點（只在右腳）', feet:'right', x:142, y:356,
+    what:'只有右腳有，位在腳跟外側附近，對應大腸的起點（闌尾旁）。',
+    pain:'多半只是腸道脹氣或蠕動較慢。但若「右下腹」持續劇烈疼痛，請立刻就醫。',
+    food:'高纖蔬果、足夠的水分，讓腸道保持通暢。',
+    move:'每天散步三十分鐘，避免久坐不動。' },
+  { g:'heel', ch:'乙狀', name:'乙狀結腸反射區', organ:'對應：大腸最後的彎（只在左腳）', feet:'left', x:120, y:358,
+    what:'只有左腳有，位在靠近腳跟的位置，對應大腸最後轉彎的一段。',
+    pain:'排便最後一段可能不順，例如常覺得排不乾淨、要蹲很久。',
+    food:'高纖維加足量的水。早上空腹喝一杯溫開水特別有幫助。',
+    move:'上廁所不要滑手機、不要蹲太久。每天固定時間如廁，養成習慣。' },
+  { g:'heel', ch:'直腸', name:'直腸、肛門反射區', organ:'對應：直腸、肛門（只在左腳）', feet:'left', x:90, y:352,
+    what:'只有左腳有，位在腳跟內側附近，對應排便的最後出口。',
+    pain:'排便可能不順，或有痔瘡的困擾。',
+    food:'多喝水、多吃蔬果。辣的、酒盡量少，以免刺激。',
+    move:'不要久坐馬桶。有痔瘡困擾可以溫水坐浴。每天做提肛運動：收緊放鬆各十下。' },
+  { g:'heel', ch:'膀', name:'膀胱反射區', organ:'對應：膀胱', feet:'both', x:58, y:332,
+    what:'位在腳掌內側、靠近腳跟的位置，對應膀胱，和排尿順不順有關。',
+    pain:'膀胱可能比較敏感，例如頻尿、夜尿，或偶爾覺得排尿不順。',
+    food:'水要喝夠但睡前兩小時少喝。不要憋尿。可以吃蔓越莓，咖啡和茶下午後少喝。',
+    move:'練習「凱格爾運動」：像忍住小便一樣收緊、放鬆，每天做三回、每回十次。' },
+  { g:'heel', ch:'骨盆', name:'骨盆腔（生殖器官）反射區', organ:'對應：骨盆腔、子宮／攝護腺', feet:'both', x:104, y:392,
+    what:'位在腳跟中央一大片，對應骨盆腔和生殖器官（女性的子宮、男性的攝護腺）。',
+    pain:'骨盆腔循環可能比較差，例如下腹容易涼涼悶悶的；年長男性常見攝護腺問題、頻尿。',
+    food:'吃溫熱的食物、少吃冰品。男性可以適量吃番茄、南瓜子，對攝護腺好。',
+    move:'不要久坐，每小時起來走一走。睡前溫水泡腳、做凱格爾運動。腳跟皮厚，按摩可以稍微用力一點。' },
+
+  /* ── 腳背區（surface: top）── */
+  { g:'top', s:'top', ch:'胸淋', name:'胸部淋巴反射區', organ:'對應：胸部淋巴（免疫力）', feet:'both', x:75, y:105,
+    what:'位在「腳背」上，大拇趾和第二趾中間往上的凹縫，對應胸部的淋巴。按「看腳背」按鈕就能看到。',
+    pain:'身體的抵抗力可能比較低，最近比較容易累、容易感冒。',
+    food:'蛋白質要吃夠：蛋、魚、豆腐。多喝水幫助淋巴循環，蔬菜水果不能少。',
+    move:'每天快走或甩手二十分鐘讓循環變好。感冒流行季節，人多的地方戴口罩。' },
+  { g:'top', s:'top', ch:'胸', name:'胸（乳部）反射區', organ:'對應：胸部、乳房', feet:'both', x:100, y:150,
+    what:'位在「腳背」前半的中央，對應胸部（乳房）。',
+    pain:'胸部循環可能比較差，例如容易胸悶。女性朋友平常也要記得定期做乳房檢查。',
+    food:'少吃油炸和高油食物，多吃蔬菜水果、豆類。',
+    move:'擴胸運動：雙手向後張開、挺胸五秒，每天十次。定期健康檢查最重要。' },
+  { g:'top', s:'top', ch:'內耳', name:'內耳迷路反射區', organ:'對應：內耳（平衡感）', feet:'both', x:155, y:125,
+    what:'位在「腳背」外側、第四五趾往上一點，對應管平衡感的內耳。',
+    pain:'平衡感可能比較差，例如容易頭暈，或站起來的時候天旋地轉。',
+    food:'少鹽（太鹹會影響內耳的水分平衡）、咖啡濃茶少喝。',
+    move:'起身時「慢慢來」：先坐起來停一下再站。可扶著椅背練習單腳站訓練平衡。常暈眩請就醫。' },
+  { g:'top', s:'top', ch:'肋', name:'肋骨反射區', organ:'對應：胸廓、肋骨', feet:'both', x:75, y:170,
+    what:'位在「腳背」內側，對應保護心肺的肋骨、胸廓。',
+    pain:'胸廓周圍的肌肉可能比較緊繃，深呼吸時覺得胸口卡卡的。',
+    food:'均衡飲食、多喝溫開水。',
+    move:'雙手舉高伸懶腰、身體慢慢左右側彎，把胸廓拉開，每天做幾次。' },
+  { g:'top', s:'top', ch:'肩胛', name:'肩胛骨反射區', organ:'對應：背後的肩胛骨', feet:'both', x:152, y:172,
+    what:'位在「腳背」外側，對應背後的肩胛骨一帶。',
+    pain:'上背、肩胛骨附近可能痠痛僵硬，常低頭、駝背的人特別明顯。',
+    food:'均衡飲食。鈣質顧骨頭：牛奶、小魚乾、豆腐。',
+    move:'夾背運動：想像兩片肩胛骨中間夾一顆球，往後夾住五秒再放鬆，每天十次。' },
+  { g:'top', s:'top', ch:'膈', name:'橫膈膜反射區', organ:'對應：橫膈膜（幫助呼吸）', feet:'both', x:108, y:200,
+    what:'橫過「腳背」中段的一條帶子，對應幫助呼吸的橫膈膜。',
+    pain:'呼吸可能比較淺、容易胸悶，或常常嘆氣、打嗝。',
+    food:'吃飯七、八分飽就好——吃太飽會頂住橫膈膜，容易打嗝脹氣。',
+    move:'腹式深呼吸最有效：吸氣時肚子鼓起、吐氣時慢慢消下去，每天做十次。' },
+  { g:'top', s:'top', z:-66, ch:'上淋', name:'上身淋巴反射區', organ:'對應：上半身淋巴', feet:'both', x:150, y:318,
+    what:'位在「腳背」靠外側腳踝的前方，對應上半身的淋巴循環。',
+    pain:'上半身的循環代謝可能比較慢，容易疲勞、手部水腫。',
+    food:'口味放淡少吃鹽，白天多喝水。',
+    move:'甩手操、擴胸運動，多活動上半身。按摩時用手指在腳踝前方輕輕畫圈。' },
+  { g:'top', s:'top', z:-66, ch:'下淋', name:'下身淋巴反射區', organ:'對應：下半身淋巴', feet:'both', x:60, y:318,
+    what:'位在「腳背」靠內側腳踝的前方，對應下半身的淋巴循環。',
+    pain:'下半身循環可能比較差，例如小腿容易腫脹、覺得腿很沉重。',
+    food:'少鹽。白天正常喝水，睡前不要喝太多。',
+    move:'睡覺時腳下墊個枕頭抬高。每天散步加踮腳尖三十下，幫小腿把血液打回心臟。' },
+  { g:'top', s:'top', z:-204, ch:'鼠蹊', name:'腹股溝（鼠蹊部）反射區', organ:'對應：大腿根部、鼠蹊部', feet:'both', x:105, y:338,
+    what:'位在「腳背」靠近腳踝的地方，對應大腿根部的鼠蹊部（腹股溝）。',
+    pain:'下半身淋巴和生殖系統的循環可能比較慢。',
+    food:'吃溫熱的食物、少吃冰品。',
+    move:'抬腿運動：扶著椅子，輪流把膝蓋往上抬，左右各十下，促進鼠蹊部循環。' },
+
+  /* ── 腳的內外側（surface: side）── */
+  { g:'side', s:'side', ch:'頸椎', name:'頸椎反射區', organ:'對應：頸椎（脖子的骨頭）', feet:'both', x:14, y:115,
+    what:'位在「腳內側」大拇趾根部關節的邊緣。腳的內側從前到後，依序對應頸椎、胸椎、腰椎、薦椎，就像一條脊椎。',
+    pain:'脖子可能比較僵硬，例如轉頭卡卡的、脖子容易痠。',
+    food:'均衡飲食，鈣質顧骨頭：牛奶、小魚乾、豆腐。',
+    move:'慢慢左右轉頭、上下點頭各十次，動作一定要慢。看電視不要一直維持同一個姿勢。' },
+  { g:'side', s:'side', ch:'胸椎', name:'胸椎反射區', organ:'對應：胸椎（上背的骨頭）', feet:'both', x:18, y:190,
+    what:'位在「腳內側」足弓的前段，對應上背部的胸椎。',
+    pain:'上背可能僵硬痠痛，駝背、常低頭的人特別明顯。',
+    food:'鈣質和維生素D：牛奶、小魚乾、雞蛋，白天曬曬太陽。',
+    move:'雙手向後夾背挺胸五秒、放鬆，每天十次。坐的時候背靠好椅背，不要駝背。' },
+  { g:'side', s:'side', ch:'腰椎', name:'腰椎反射區', organ:'對應：腰椎（腰部的骨頭）', feet:'both', x:26, y:255,
+    what:'位在「腳內側」足弓的中段，對應腰部的腰椎。',
+    pain:'腰可能容易痠，彎腰、久站久坐比較吃力。',
+    food:'鈣質和維生素D要夠，維持適當體重，減少腰的負擔。',
+    move:'躺著抱膝輕輕左右搖，放鬆腰部。搬東西要蹲下來搬、不要彎腰。腰痠可以熱敷。' },
+  { g:'side', s:'side', ch:'薦椎', name:'薦椎反射區', organ:'對應：薦椎（腰底、骨盆交界）', feet:'both', x:30, y:316,
+    what:'位在「腳內側」足弓的後段、靠近腳跟，對應腰底部和骨盆交界的薦椎。',
+    pain:'腰的最下面、接近屁股的地方可能容易痠，久坐的人常見。',
+    food:'均衡飲食、鈣質足夠。',
+    move:'站著手扶椅背，骨盆輕輕前後擺動十次。每坐一小時就起來走一走。' },
+  { g:'side', s:'side', ch:'髖', name:'髖關節反射區', organ:'對應：髖關節（大腿與骨盆的關節）', feet:'both', x:178, y:315,
+    what:'位在腳踝骨頭下方彎彎的一圈（內踝、外踝下方都有），這個點畫在外側做代表。',
+    pain:'髖部可能比較緊，例如走路時大腿根部卡卡的、跨步變小。',
+    food:'蛋白質和鈣質要吃夠：蛋、魚、豆腐、牛奶，保護關節和肌肉。',
+    move:'扶著椅背輪流抬膝蓋、腿往旁邊輕輕抬開，各十下。不要長時間盤腿或翹腳。' },
+  { g:'side', s:'side', ch:'子宮', name:'子宮／攝護腺反射區', organ:'女性：子宮｜男性：攝護腺（腳跟內側）', feet:'both', x:28, y:352,
+    what:'位在「腳跟內側」的側面（靠雙腳中間那一側），女性對應子宮、男性對應攝護腺。把腳左右轉一下就能看到這個點。',
+    pain:'女性可能骨盆腔循環較差、下腹容易涼涼悶悶；年長男性常見攝護腺問題，例如夜尿多、排尿變慢變細。',
+    food:'男性可以常吃番茄（煮過的更好）、南瓜子。大家都少吃冰品、少喝酒。',
+    move:'不要久坐，每小時起來走走。做凱格爾運動、睡前泡腳。排尿問題持續，請看泌尿科。',
+  },
+  { g:'side', s:'side', ch:'卵巢', name:'卵巢／睪丸反射區', organ:'女性：卵巢｜男性：睪丸（腳跟外側）', feet:'both', x:178, y:352,
+    what:'位在「腳跟外側」的側面（靠外那一側），女性對應卵巢、男性對應睪丸。把腳左右轉一下就能看到這個點。',
+    pain:'生殖腺的機能可能比較疲勞，和體力、荷爾蒙變化有關。',
+    food:'均衡飲食，適量吃堅果、雞蛋、豆類這些好的蛋白質和油脂。',
+    move:'規律運動、睡眠充足、維持適當體重，就是對荷爾蒙最好的保養。' },
+  { g:'side', s:'side', ch:'尾骨', name:'尾骨反射區', organ:'對應：尾椎骨（腳跟後緣）', feet:'both', x:102, y:434,
+    what:'沿著「腳跟後面的邊緣」一圈，對應脊椎最下面的尾椎骨。',
+    pain:'尾椎附近可能痠痛，常坐硬椅子、久坐不動的人特別容易。',
+    food:'均衡飲食即可。鈣質和維生素D顧骨頭：牛奶、小魚乾、曬太陽。',
+    move:'椅子加個軟墊、每小時起身活動。站著輕輕前後擺動骨盆，放鬆尾椎周圍。' },
+];
+
+/* ── 下方清單（分區顯示）── */
+const listBox = document.getElementById('list');
+for(const grp of GROUPS){
+  const h = document.createElement('h3');
+  h.className = 'grp';
+  h.textContent = grp.title;
+  listBox.appendChild(h);
+  const grid = document.createElement('div');
+  grid.className = 'list';
+  for(const item of POINTS.filter(p => p.g === grp.key)){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const side = item.feet === 'left' ? '只在左腳' : item.feet === 'right' ? '只在右腳' : '兩腳都有';
+    const two = item.ch.length > 1 ? ' two' : '';
+    btn.innerHTML = '<span class="badge' + two + '">' + item.ch + '</span><span>' +
+                    item.name.replace('反射區','') +
+                    '<span class="side-tag">' + side + '</span></span>';
+    btn.addEventListener('click', () => openSheet(item));
+    grid.appendChild(btn);
+  }
+  listBox.appendChild(grid);
+}
+
+/* ── 彈出視窗 ── */
+const overlay = document.getElementById('overlay');
+function openSheet(item){
+  const badge = document.getElementById('mBadge');
+  badge.textContent = item.ch;
+  badge.className = 'badge' + (item.ch.length > 1 ? ' two' : '');
+  document.getElementById('mTitle').textContent = item.name;
+  document.getElementById('mOrgan').textContent = item.organ;
+  document.getElementById('mWhat').textContent = item.what;
+  document.getElementById('mPain').textContent = item.pain;
+  document.getElementById('mFood').textContent = item.food;
+  document.getElementById('mMove').textContent = item.move;
+  document.querySelector('.sheet-scroll').scrollTop = 0;
+  document.body.classList.add('open');
+}
+function closeSheet(){ document.body.classList.remove('open'); }
+document.getElementById('closeBtn').addEventListener('click', closeSheet);
+overlay.addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet(); });
+
+/* ══════════ 3D 雙腳 ══════════ */
+(function(){
+  const canvas = document.getElementById('stage');
+  if(typeof THREE === 'undefined' || !window.WebGLRenderingContext){
+    canvas.style.display = 'none';
+    document.getElementById('webglFail').style.display = 'block';
+    return;
+  }
+  let renderer;
+  try{
+    renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  }catch(e){
+    canvas.style.display = 'none';
+    document.getElementById('webglFail').style.display = 'block';
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 1, 4000);
+  let camZ = 620;
+  camera.position.set(0, 0, camZ);
+
+  /* 地面反光色不能太深，否則朝下的曲面（腳背後段）會整片變咖啡色 */
+  scene.add(new THREE.HemisphereLight(0xfff6e8, 0xC4B29B, 0.75));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.32);
+  dir.position.set(120, 200, 400);
+  scene.add(dir);
+  const dirBack = new THREE.DirectionalLight(0xffffff, 0.3);  // 翻到腳背那面也要有光
+  dirBack.position.set(-80, 160, -400);
+  scene.add(dirBack);
+
+  const world = new THREE.Group();   // 用來旋轉的容器
+  scene.add(world);
+  window.__world = world;            // 除錯用
+
+  /* 卡通三階色調（動畫上色式的分層陰影） */
+  const gradData = new Uint8Array([160,160,160,255, 212,212,212,255, 255,255,255,255]);
+  const gradMap = new THREE.DataTexture(gradData, 3, 1, THREE.RGBAFormat);
+  gradMap.minFilter = gradMap.magFilter = THREE.NearestFilter;
+  gradMap.needsUpdate = true;
+
+  const skinMat = new THREE.MeshToonMaterial({ color:0xF6D2AE, gradientMap:gradMap, side:THREE.DoubleSide });
+  const nailMat = new THREE.MeshToonMaterial({ color:0xFBEFE1, gradientMap:gradMap, side:THREE.DoubleSide });
+  const outlineMat = new THREE.MeshBasicMaterial({ color:0xB07747, side:THREE.BackSide });
+
+  const CX = 100, CY = 220;   // 置中用
+  const SOLE_Z = 24;          // 腳底最凸點高度
+
+  /* 加上卡通描邊：同一個模型放大一點、反面上深色 */
+  function addWithOutline(mesh, g, f){
+    g.add(mesh);
+    const o = mesh.clone();
+    o.material = outlineMat;
+    o.scale.multiplyScalar(f || 1.05);
+    g.add(o);
+  }
+
+  /* 腳掌斷面關鍵點：[y, 中心x, 半寬, 腳背高度] —— 腳跟高圓、足弓收窄、前掌寬扁 */
+  const PROF = [
+    [86,104,84,24],[140,104,86,31],[200,102,73,39],
+    [260,100,61,45],[310,99,57,49],[360,100,60,52],[410,101,57,46]
+  ];
+  function prof(y){
+    if(y <= PROF[0][0]) return PROF[0];
+    for(let i = 0; i < PROF.length - 1; i++){
+      const a = PROF[i], b = PROF[i+1];
+      if(y <= b[0]){
+        const t = (y - a[0]) / (b[0] - a[0]);
+        return [y, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t, a[3]+(b[3]-a[3])*t];
+      }
+    }
+    return PROF[PROF.length - 1];
+  }
+
+  /* 用一圈一圈的斷面「放樣」出圓潤的腳掌 */
+  function buildSoleGeometry(){
+    const SEG = 30, rows = [];
+    for(let k = 4; k >= 1; k--){          // 前端圓弧收頭
+      const a = k / 4.4 * Math.PI / 2;
+      rows.push({ y: 86 - 16 * Math.sin(a), s: Math.cos(a) });
+    }
+    for(let y = 86; y <= 410; y += 12) rows.push({ y, s: 1 });
+    for(let k = 1; k <= 4; k++){          // 腳跟圓弧收頭
+      const a = k / 4.4 * Math.PI / 2;
+      rows.push({ y: 410 + 18 * Math.sin(a), s: Math.cos(a) });
+    }
+    const pos = [];
+    for(const row of rows){
+      const p = prof(Math.min(Math.max(row.y, 86), 410));
+      for(let j = 0; j < SEG; j++){
+        const th = j / SEG * Math.PI * 2;
+        const u = Math.cos(th), v = Math.sin(th);
+        const z = v >= 0
+          ? SOLE_Z * row.s * Math.pow(v, 0.4)              // 腳底：平中帶圓
+          : -p[3] * row.s * Math.pow(-v, 0.85);            // 腳背：飽滿弧面
+        const xw = p[2] * row.s * (1 - 0.10 * Math.max(0, -v));
+        pos.push((p[1] - CX) + xw * u, -(row.y - CY), z);
+      }
+    }
+    const idx = [];
+    for(let r = 0; r < rows.length - 1; r++){
+      for(let j = 0; j < SEG; j++){
+        const j2 = (j + 1) % SEG;
+        const a = r*SEG+j, b = r*SEG+j2, c = (r+1)*SEG+j2, d = (r+1)*SEG+j;
+        idx.push(a, b, c, a, c, d);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const soleGeo = buildSoleGeometry();
+
+  /* 腳踝／小腿：斷面放樣 —— [z高度, x半徑, y半徑, y中心]
+     底部埋進腳背、踝骨高度微寬、往上是直筒小腿、頂端平切 */
+  const ANKLE_PROF = [
+    [-24, 46, 58, -118],
+    [-44, 38, 46, -122],
+    [-58, 36, 42, -124],
+    [-72, 34, 38, -125],
+    [-90, 30, 34, -126],
+    [-120, 28, 32, -126],
+    [-155, 28, 31, -126],
+    [-182, 29, 32, -126],
+    [-188, 28, 31, -126],
+    [-190, 9, 10, -126]
+  ];
+  function buildAnkleGeometry(){
+    const SEG = 24, pos = [];
+    for(const [z, rx, ry, cy] of ANKLE_PROF){
+      for(let j = 0; j < SEG; j++){
+        const th = j / SEG * Math.PI * 2;
+        pos.push(rx * Math.cos(th), cy + ry * Math.sin(th), z);
+      }
+    }
+    const idx = [];
+    for(let r = 0; r < ANKLE_PROF.length - 1; r++){
+      for(let j = 0; j < SEG; j++){
+        const j2 = (j + 1) % SEG;
+        const a = r*SEG+j, b = r*SEG+j2, c = (r+1)*SEG+j2, d = (r+1)*SEG+j;
+        idx.push(a, b, c, a, c, d);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const ankleGeo = buildAnkleGeometry();
+
+  const TOES3D = [ [46,40,30,38],[99,38,20,30],[136,48,18,27],[168,64,17,24],[190,82,15,20] ];
+
+  function buildFoot(){
+    const g = new THREE.Group();
+    addWithOutline(new THREE.Mesh(soleGeo, skinMat), g, 1.04);
+    for(const [cx,cy,rx,ry] of TOES3D){
+      const toe = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), skinMat);
+      toe.scale.set(rx, ry, 19);
+      toe.position.set(cx - CX, -(cy - CY), 4);   // 趾腹貼齊腳底
+      addWithOutline(toe, g, 1.1);
+      const nail = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), nailMat);
+      nail.scale.set(rx * 0.55, ry * 0.42, 5);
+      nail.position.set(cx - CX, -(cy - CY) + ry * 0.28, -13);
+      g.add(nail);
+    }
+    /* 腳踝／半截小腿（平滑放樣、無縫接到腳背；錐形物件不加倒殼描邊，會產生整片色塊） */
+    g.add(new THREE.Mesh(ankleGeo, skinMat));
+    return g;
+  }
+
+  const rightFoot = buildFoot();  rightFoot.position.x = 118;
+  const leftFoot  = buildFoot();  leftFoot.scale.x = -1;  leftFoot.position.x = -118;
+  world.add(leftFoot, rightFoot);
+
+  /* 穴道紅點（用永遠面向鏡頭的 Sprite） */
+  function makeDotTexture(ch){
+    const c = document.createElement('canvas');
+    c.width = c.height = 160;
+    const ctx = c.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(80, 80, 68, 0, Math.PI * 2);
+    ctx.fillStyle = '#B5402E';
+    ctx.fill();
+    ctx.lineWidth = 9;
+    ctx.strokeStyle = '#FFFDF7';
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 ' + (ch.length > 1 ? 52 : 68) + 'px "PingFang TC","Microsoft JhengHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, 80, 86);
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  const sprites = [];
+  function addDot(item, foot){
+    const mat = new THREE.SpriteMaterial({ map:makeDotTexture(item.ch) });
+    const sp = new THREE.Sprite(mat);
+    const fx = (foot === 'right' ? 118 : -118) + (foot === 'right' ? (item.x - CX) : -(item.x - CX));
+    /* 依表面決定深度：腳底在前(+z)、腳背在後(-z)、腳側在中間；靠近腳踝的點可用 z 個別調高 */
+    const z = item.z !== undefined ? item.z : (item.s === 'top' ? -56 : item.s === 'side' ? 10 : SOLE_Z + 16);
+    sp.position.set(fx, -(item.y - CY), z);
+    sp.scale.set(32, 32, 1);
+    sp.userData.item = item;
+    world.add(sp);
+    sprites.push(sp);
+  }
+  for(const item of POINTS){
+    if(item.feet === 'both' || item.feet === 'left')  addDot(item, 'left');
+    if(item.feet === 'both' || item.feet === 'right') addDot(item, 'right');
+  }
+
+  /* 尺寸 */
+  function resize(){
+    const w = canvas.clientWidth || canvas.parentElement.clientWidth;
+    const h = 460;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* 旋轉（單指拖曳）＋ 點擊判斷 */
+  let dragging = false, moved = 0, lastX = 0, lastY = 0, downX = 0, downY = 0;
+  let targetRotY = 0, targetRotX = 0;
+
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true; moved = 0;
+    lastX = downX = e.clientX; lastY = downY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    targetRotY += dx * 0.011;
+    targetRotX = Math.max(-0.6, Math.min(0.6, targetRotX + dy * 0.007));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  canvas.addEventListener('pointerup', e => {
+    dragging = false;
+    if(moved < 10) tap(e);   // 幾乎沒移動 → 當成點擊
+  });
+  canvas.addEventListener('pointercancel', () => { dragging = false; });
+
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  function tap(e){
+    const r = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(sprites);
+    if(hits.length) openSheet(hits[0].object.userData.item);
+  }
+
+  /* 按鈕：放大、縮小、回正 */
+  document.getElementById('zoomIn').addEventListener('click', () => { camZ = Math.max(280, camZ - 90); });
+  document.getElementById('zoomOut').addEventListener('click', () => { camZ = Math.min(900, camZ + 90); });
+  document.getElementById('flipView').addEventListener('click', () => { targetRotY = Math.PI; targetRotX = 0; });
+  document.getElementById('resetView').addEventListener('click', () => { targetRotY = 0; targetRotX = 0; camZ = 620; });
+
+  /* 開場輕輕轉一下，提示可以旋轉 */
+  world.rotation.y = -0.55;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) world.rotation.y = 0;
+
+  function animate(){
+    requestAnimationFrame(animate);
+    world.rotation.y += (targetRotY - world.rotation.y) * 0.12;
+    world.rotation.x += (targetRotX - world.rotation.x) * 0.12;
+    camera.position.z += (camZ - camera.position.z) * 0.12;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
