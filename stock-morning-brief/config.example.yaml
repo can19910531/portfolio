@@ -46,3 +46,41 @@ show_bars: 60
 
 # 漲跌顏色習慣：tw（紅漲綠跌）/ us（綠漲紅跌）
 color_convention: tw
+
+# ============================================================
+# AI 市場重點（brief.py 用；不需要這段就把 enabled 設成 false）
+# ============================================================
+ai:
+  # 關掉的話晨報只有「健檢＋K線圖」，不含市場重點段
+  enabled: true
+
+  # 會網搜的 AI CLI 指令或完整路徑（需自行安裝並登入）
+  # 例：claude（在 PATH 上）／C:\Users\你的帳號\.local\bin\claude.exe
+  cli: claude
+  model: sonnet
+
+  # 查核 pass：產出後另開一次乾淨的 AI 呼叫，逐條打開來源比對，
+  # 專抓「方向詞寫反／數字不符／來源沒提到」。會多花約 1~4 分鐘。
+  # 關掉可省一次呼叫，但錯誤就沒有第二道防線。
+  verify: true
+
+  # 新聞來源白名單。**留空（[]）= 不限制來源**。
+  #
+  # 為什麼建議限制：不限制的話 AI 會搜到個人部落格、內容農場、新聞聚合站
+  # （原始出處被蓋掉）甚至通膨計算器這類工具站，內容品質參差會干擾判讀。
+  # 實測：某次未限制時，12 份簡報引用了 38 個不同網域，其中混進個人寫作平台。
+  #
+  # 下面是預設建議清單，請改成**你自己信任的**媒體與券商：
+  sources:
+    # ── 台股 ──
+    - news.cnyes.com        # 鉅亨網
+    - udn.com               # 聯合新聞網（含 money.udn.com 經濟日報）
+    - tw.stock.yahoo.com    # Yahoo 股市
+    - finance.ettoday.net   # ETtoday 財經
+    - moneydj.com           # MoneyDJ
+    # ── 美股／國際 ──
+    - finance.yahoo.com     # Yahoo Finance
+    - reuters.com           # 路透
+    - cnbc.com              # CNBC
+    # ── 一手來源（央行、交易所、公司官方新聞室永遠允許，列出來當提醒）──
+    - federalreserve.gov    # 聯準會（含各區聯邦準備銀行 *.org）

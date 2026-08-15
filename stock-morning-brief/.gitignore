@@ -14,3 +14,4 @@ __pycache__/
 
 # 雜項
 ~$*
+.brief.lock
