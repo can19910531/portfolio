@@ -23,7 +23,8 @@ import subprocess
 import sys
 import unicodedata
 
-sys.stdout.reconfigure(encoding="utf-8")
+if sys.stdout:  # 被無視窗 exe（小幫手）載入時 stdout 是 None，不能直接 reconfigure
+    sys.stdout.reconfigure(encoding="utf-8")
 BASE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(BASE)
 
