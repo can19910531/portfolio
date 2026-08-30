@@ -263,6 +263,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
         <button id="chooseRefund">💰 我要退款</button>
         <button id="chooseCredit">🎁 我要轉購物金</button>
       </div>
+      <div class="note" id="choiceNote"></div>
       <div id="refundForm" hidden>
         <label for="hname">本人姓名<small>僅用於銀行帳號確認</small></label>
         <input id="hname" autocomplete="off" placeholder="例如：林小美" maxlength="30">
@@ -408,6 +409,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
       setAlready(res.submitted);
       setChoice(null);
       var dl = state.deadline ? '（' + esc(state.deadline) + '）' : '';
+      $('choiceNote').innerHTML = '斷貨退款截止期限' + dl + '前<span class="red">未登記</span>，就會自動轉成購物金喔～';
       $('deadlineNote').innerHTML = '如果在申請退款期限' + dl +
         '<span class="red">未完成</span>填寫退款帳號，就會在申請退款期限的最後一天，統一轉成購物金，謝謝';
       hideErr($('sErr')); hideErr($('cErr'));
@@ -426,6 +428,8 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     $('chooseCredit').classList.toggle('sel', kind === 'credit');
     $('refundForm').hidden = kind !== 'refund';
     $('creditForm').hidden = kind !== 'credit';
+    // 還沒選之前顯示截止提醒；點開任一表單後收起來（表單內有各自的說明）
+    $('choiceNote').style.display = kind ? 'none' : 'block';
   }
   function setAlready(type){
     var el = $('already');
