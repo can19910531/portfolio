@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <path id="arcTop" d="M 30 100 A 70 70 0 0 1 170 100" fill="none"/>
+  </defs>
+  <!-- 外圈 -->
+  <circle cx="100" cy="100" r="96" fill="#FFF3E4"/>
+  <circle cx="100" cy="100" r="96" fill="none" stroke="#F2704F" stroke-width="5"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#F2A03F" stroke-width="2" stroke-dasharray="3 6" stroke-linecap="round"/>
+  <!-- 中央字樣 -->
+  <text x="100" y="102" text-anchor="middle" font-family="'Baloo 2','Comic Sans MS',cursive" font-weight="800" font-size="34" fill="#5C3A28">東大門</text>
+  <text x="100" y="134" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-weight="700" font-size="19" letter-spacing="2" fill="#B0603F">湊單團</text>
+  <!-- 上緣弧形小字 -->
+  <text font-family="'Noto Sans TC',sans-serif" font-weight="700" font-size="13" letter-spacing="4" fill="#F2704F">
+    <textPath href="#arcTop" startOffset="50%" text-anchor="middle">DONGDAEMUN GROUP BUY</textPath>
+  </text>
+  <!-- 小裝飾 -->
+  <text x="45" y="152" font-size="16" transform="rotate(-12 45 152)">🛍️</text>
+  <text x="142" y="156" font-size="16" transform="rotate(10 148 152)">🧡</text>
+  <circle cx="100" cy="58" r="3" fill="#F2A03F"/>
+</svg>

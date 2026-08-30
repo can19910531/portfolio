@@ -1,0 +1,10 @@
+{
+  "_說明": "複製這個檔案改名為 設定.json，把下面三個值換成你自己的（做法見 README 的安裝指南）",
+  "spreadsheetId": "你的Google試算表ID（網址中 /d/ 後面那串）",
+  "查詢資料分頁": "查詢資料",
+  "回覆分頁": "退款帳號回覆",
+  "設定分頁": "設定",
+  "apps_script_url": "你的Apps Script網頁應用程式網址（https://script.google.com/macros/s/.../exec）",
+  "pages_project": "你的CloudflarePages專案名稱",
+  "pages_url": "部署後的網址（第一次部署完再填）"
+}

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>到貨斷貨查詢</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;500;700;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FFF6EA;
+  --paper:#FFFDF8;
+  --ink:#4A382B;
+  --ink-soft:#8A7261;
+  --coral:#F2704F;
+  --coral-deep:#D9532F;
+  --peach:#FFDFC2;
+  --mint:#2FA383;
+  --mint-soft:#E2F4EC;
+  --red:#D93025;
+  --amber:#F2A03F;
+  --line:#EAD9C4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  min-height:100dvh;
+  font-family:'Noto Sans TC',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, #FFE9CF 0 140px, transparent 141px),
+    radial-gradient(circle at 90% 30%, #FFE3D6 0 110px, transparent 111px),
+    repeating-linear-gradient(0deg, transparent 0 22px, rgba(242,112,79,.045) 22px 23px),
+    var(--cream);
+  display:flex;flex-direction:column;align-items:center;
+  padding:max(20px, env(safe-area-inset-top)) 16px 64px;
+}
+.wrap{width:100%;max-width:430px}
+
+/* ── 頁首 ── */
+header{text-align:center;padding:8px 0 4px}
+.logo{
+  width:108px;height:108px;border-radius:50%;object-fit:cover;
+  box-shadow:0 6px 18px rgba(217,83,47,.22), 0 0 0 6px var(--paper), 0 0 0 8px var(--peach);
+  background:var(--paper);
+  animation:pop .5s cubic-bezier(.2,1.6,.4,1) both;
+}
+h1{
+  font-family:'Iansui','Noto Sans TC',cursive;
+  font-size:1.9rem;letter-spacing:.12em;margin-top:16px;font-weight:400;
+  animation:rise .5s .08s cubic-bezier(.2,1,.4,1) both;
+}
+h1 .hl{
+  background:linear-gradient(transparent 62%, var(--peach) 62% 94%, transparent 94%);
+  padding:0 .1em;
+}
+.sub{
+  color:var(--ink-soft);font-size:.95rem;margin-top:8px;letter-spacing:.08em;
+  animation:rise .5s .16s cubic-bezier(.2,1,.4,1) both;
+}
+.month-tag{
+  display:inline-block;margin-top:10px;font-weight:700;font-size:.85rem;color:var(--coral-deep);
+  background:var(--paper);border:1.5px dashed var(--coral);border-radius:999px;padding:4px 14px;
+  animation:rise .5s .22s cubic-bezier(.2,1,.4,1) both;
+}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── 查詢表單 ── */
+.card{
+  background:var(--paper);border-radius:20px;padding:22px 20px;margin-top:20px;
+  box-shadow:0 3px 0 var(--line), 0 14px 30px rgba(138,90,50,.10);
+  animation:rise .5s .3s cubic-bezier(.2,1,.4,1) both;
+}
+label{display:block;font-weight:700;font-size:.9rem;margin:14px 2px 6px;letter-spacing:.05em}
+label:first-child{margin-top:0}
+label small{font-weight:400;color:var(--ink-soft);margin-left:6px}
+input{
+  width:100%;font:inherit;font-size:1.05rem;color:var(--ink);
+  background:var(--cream);border:2px solid var(--line);border-radius:12px;
+  padding:12px 14px;outline:none;transition:border-color .2s, box-shadow .2s;
+}
+input:focus{border-color:var(--coral);box-shadow:0 0 0 3px rgba(242,112,79,.15)}
+input::placeholder{color:#C9B49E}
+button.main{
+  width:100%;margin-top:20px;font:inherit;font-weight:900;font-size:1.05rem;letter-spacing:.2em;
+  color:#fff;background:linear-gradient(180deg,var(--coral),var(--coral-deep));
+  border:none;border-radius:14px;padding:14px;cursor:pointer;
+  box-shadow:0 4px 0 #B4401F;transition:transform .1s, box-shadow .1s, opacity .2s;
+}
+button.main:active{transform:translateY(3px);box-shadow:0 1px 0 #B4401F}
+button.main:disabled{opacity:.55;box-shadow:0 4px 0 #B4401F}
+.err{
+  display:none;margin-top:14px;background:#FDECEA;border:1.5px solid #F5C6C0;color:var(--red);
+  border-radius:12px;padding:11px 14px;font-size:.92rem;line-height:1.6;
+}
+.err.show{display:block;animation:rise .3s both}
+
+/* ── 收據 ── */
+#result{display:none}
+#result.show{display:block;animation:rise .45s both}
+.receipt{
+  margin-top:24px;background:var(--paper);position:relative;
+  filter:drop-shadow(0 12px 22px rgba(138,90,50,.16));
+  /* 收據上下鋸齒邊 */
+  --zz:10px;
+  clip-path:polygon(0 var(--zz),
+    2.5% 0,5% var(--zz),7.5% 0,10% var(--zz),12.5% 0,15% var(--zz),17.5% 0,20% var(--zz),22.5% 0,25% var(--zz),27.5% 0,30% var(--zz),32.5% 0,35% var(--zz),37.5% 0,40% var(--zz),42.5% 0,45% var(--zz),47.5% 0,50% var(--zz),52.5% 0,55% var(--zz),57.5% 0,60% var(--zz),62.5% 0,65% var(--zz),67.5% 0,70% var(--zz),72.5% 0,75% var(--zz),77.5% 0,80% var(--zz),82.5% 0,85% var(--zz),87.5% 0,90% var(--zz),92.5% 0,95% var(--zz),97.5% 0,100% var(--zz),
+    100% calc(100% - var(--zz)),
+    97.5% 100%,95% calc(100% - var(--zz)),92.5% 100%,90% calc(100% - var(--zz)),87.5% 100%,85% calc(100% - var(--zz)),82.5% 100%,80% calc(100% - var(--zz)),77.5% 100%,75% calc(100% - var(--zz)),72.5% 100%,70% calc(100% - var(--zz)),67.5% 100%,65% calc(100% - var(--zz)),62.5% 100%,60% calc(100% - var(--zz)),57.5% 100%,55% calc(100% - var(--zz)),52.5% 100%,50% calc(100% - var(--zz)),47.5% 100%,45% calc(100% - var(--zz)),42.5% 100%,40% calc(100% - var(--zz)),37.5% 100%,35% calc(100% - var(--zz)),32.5% 100%,30% calc(100% - var(--zz)),27.5% 100%,25% calc(100% - var(--zz)),22.5% 100%,20% calc(100% - var(--zz)),17.5% 100%,15% calc(100% - var(--zz)),12.5% 100%,10% calc(100% - var(--zz)),7.5% 100%,5% calc(100% - var(--zz)),2.5% 100%,0 calc(100% - var(--zz)));
+  padding:30px 20px 34px;
+}
+.tape{
+  position:absolute;top:-2px;left:50%;transform:translateX(-50%) rotate(-2deg);
+  background:rgba(255,214,171,.85);color:#9C5B33;
+  font-family:'Baloo 2',cursive;font-weight:800;font-size:.8rem;letter-spacing:.25em;
+  padding:4px 22px;border-radius:3px;
+  box-shadow:0 2px 5px rgba(0,0,0,.08);
+}
+.r-head{text-align:center;padding-bottom:14px;border-bottom:2px dashed var(--line)}
+.r-head .who{font-weight:900;font-size:1.15rem;letter-spacing:.06em;margin-top:8px}
+.r-head .meta{color:var(--ink-soft);font-size:.82rem;margin-top:4px;letter-spacing:.1em}
+
+.items{padding:6px 0}
+.item{padding:12px 2px;border-bottom:1.5px dashed var(--line);display:flex;gap:10px;align-items:flex-start}
+.item:last-child{border-bottom:none}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:500;font-size:.95rem;line-height:1.45;word-break:break-all}
+.item .spec{color:var(--ink-soft);font-size:.8rem;margin-top:4px;letter-spacing:.03em}
+.item .spec b{color:var(--ink);font-weight:700}
+.badge{flex-shrink:0;text-align:right}
+.badge .ok{
+  display:inline-block;background:var(--mint-soft);color:var(--mint);
+  font-weight:900;border-radius:999px;padding:3px 12px;font-size:.9rem;
+}
+.badge .out{
+  display:inline-block;background:#FDE8E4;color:var(--coral-deep);
+  font-weight:700;border-radius:10px;padding:4px 10px;font-size:.8rem;line-height:1.4;
+}
+.badge .out-amt{display:block;color:var(--red);font-weight:900;font-size:.95rem;margin-top:4px}
+
+.totals{border-top:2px dashed var(--line);padding-top:12px;font-size:.92rem}
+.trow{display:flex;justify-content:space-between;align-items:baseline;padding:5px 2px;color:var(--ink)}
+.trow .k{color:var(--ink-soft);letter-spacing:.05em}
+.trow .v{font-weight:700;font-variant-numeric:tabular-nums}
+.trow.grand{margin-top:6px;padding-top:10px;border-top:2px solid var(--ink)}
+.trow.grand .k{color:var(--ink);font-weight:900}
+.trow.grand .v{font-size:1.2rem;font-weight:900}
+.trow.refund .k,.trow.refund .v{color:var(--red);font-weight:900}
+.r-foot{text-align:center;color:#C9B49E;font-size:.72rem;letter-spacing:.35em;margin-top:16px}
+
+/* ── 退款區 ── */
+.refund-card{
+  margin-top:22px;background:var(--paper);border-radius:20px;padding:24px 20px;
+  border:2.5px solid var(--coral);
+  box-shadow:0 3px 0 rgba(217,83,47,.35), 0 14px 30px rgba(217,83,47,.12);
+}
+.refund-card h2{
+  font-family:'Iansui','Noto Sans TC',cursive;font-weight:400;
+  font-size:1.25rem;letter-spacing:.1em;text-align:center;
+}
+.refund-amt{
+  text-align:center;margin:14px 0 4px;color:var(--coral-deep);
+  font-weight:900;font-size:2rem;font-variant-numeric:tabular-nums;
+}
+.refund-amt small{font-size:.9rem;font-weight:700;letter-spacing:.1em}
+.already{
+  display:none;margin-top:12px;background:var(--mint-soft);color:var(--mint);
+  border-radius:12px;padding:10px 14px;font-size:.88rem;line-height:1.6;text-align:center;font-weight:700;
+}
+.already.show{display:block}
+.note{
+  margin-top:16px;background:#FFF8EC;border:1.5px dashed var(--amber);border-radius:12px;
+  padding:12px 14px;font-size:.86rem;line-height:1.8;color:#7A5C33;
+}
+.note .red{color:var(--red);font-weight:900}
+.done-note{display:none;margin-top:14px;text-align:center;color:var(--ink-soft);font-size:.85rem;line-height:1.7}
+.done-note.show{display:block}
+
+/* ── 成功彈窗 ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(74,56,43,.45);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;padding:24px;z-index:50;
+}
+.overlay.show{display:flex}
+.modal{
+  background:var(--paper);border-radius:22px;padding:30px 24px;max-width:340px;width:100%;
+  text-align:center;animation:pop .45s cubic-bezier(.2,1.5,.4,1) both;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.modal .emoji{font-size:2.6rem}
+.modal h3{font-family:'Iansui','Noto Sans TC',cursive;font-weight:400;font-size:1.3rem;margin:10px 0 12px;letter-spacing:.1em}
+.modal p{font-size:.92rem;line-height:1.9;color:var(--ink-soft)}
+.modal button{
+  margin-top:18px;font:inherit;font-weight:900;letter-spacing:.15em;color:var(--coral-deep);
+  background:var(--peach);border:none;border-radius:999px;padding:10px 34px;cursor:pointer;
+}
+
+/* ── 載入小點點 ── */
+.dots{display:none;justify-content:center;gap:8px;margin-top:22px}
+.dots.show{display:flex}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--coral);animation:bnc .9s infinite}
+.dots i:nth-child(2){animation-delay:.15s;background:var(--amber)}
+.dots i:nth-child(3){animation-delay:.3s;background:var(--mint)}
+@keyframes bnc{0%,70%,100%{transform:translateY(0)}35%{transform:translateY(-9px)}}
+
+footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="logo" id="logo" src="logo.svg" alt="東大門湊單團">
+    <h1>到貨<span class="hl">斷貨</span>查詢</h1>
+    <div class="sub">請輸入會員編號查詢</div>
+    <div class="month-tag" id="monthTag" hidden></div>
+  </header>
+
+  <div class="card" id="queryCard">
+    <label for="mid">會員編號</label>
+    <input id="mid" inputmode="text" autocomplete="off" placeholder="例如：M0123" maxlength="10">
+    <button class="main" id="btnQuery">查　詢</button>
+    <div class="err" id="qErr"></div>
+  </div>
+
+  <div class="dots" id="dots"><i></i><i></i><i></i></div>
+
+  <div id="result">
+    <div class="receipt">
+      <div class="tape">GROUP BUY RECEIPT</div>
+      <div class="r-head">
+        <div class="who" id="rWho"></div>
+        <div class="meta" id="rMeta"></div>
+      </div>
+      <div class="items" id="rItems"></div>
+      <div class="totals" id="rTotals"></div>
+      <div class="r-foot">♡ THANK YOU ♡</div>
+    </div>
+
+    <div class="refund-card" id="refundCard" hidden>
+      <h2>🥺 斷貨退款登記</h2>
+      <div class="refund-amt"><small>應退金額　</small><span id="rAmt"></span></div>
+      <div class="already" id="already">已經收到妳填過的退款帳號囉！<br>要更換帳號的話，重新填寫送出即可～</div>
+      <label for="hname">本人姓名<small>僅用於銀行帳號確認</small></label>
+      <input id="hname" autocomplete="off" placeholder="例如：林小美" maxlength="30">
+      <label for="bank">銀行代碼<small>3 碼數字</small></label>
+      <input id="bank" inputmode="numeric" autocomplete="off" placeholder="例如：822" maxlength="3">
+      <label for="acct">退款帳號<small>10～14 碼數字</small></label>
+      <input id="acct" inputmode="numeric" autocomplete="off" placeholder="請輸入帳號數字" maxlength="20">
+      <div class="note" id="deadlineNote"></div>
+      <button class="main" id="btnSubmit">確認退款帳號，送出</button>
+      <div class="err" id="sErr"></div>
+    </div>
+    <div class="done-note" id="allOkNote">這次訂購的商品都沒有斷貨，安心等收貨就可以囉 🧡</div>
+  </div>
+
+  <footer>DONGDAEMUN GROUP BUY</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="emoji">🧡</div>
+    <h3>已收到退款帳號！</h3>
+    <p>感謝查詢，已收到你的退款帳號，我們會在申請退款期限的最後一天，統一完成退款，感謝耐心等候～謝謝</p>
+    <button id="btnClose">好　的</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var CFG = window.SITE_CONFIG || {};
+  var state = { member:null, data:null, month:'', deadline:'' };
+  var $ = function(id){ return document.getElementById(id); };
+
+  // logo：主理人放了 logo.png / logo.jpg 就自動換掉預設圖
+  if (CFG.logo) $('logo').src = CFG.logo;
+  if (CFG.month) { $('monthTag').textContent = CFG.month + '團員專屬'; $('monthTag').hidden = false; }
+
+  function nt(n){ return 'NT$' + Number(n||0).toLocaleString('zh-Hant-TW'); }
+
+  function api(body){
+    if (!CFG.apiUrl) return Promise.reject(new Error('noapi'));
+    return fetch(CFG.apiUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); });
+  }
+
+  var ERR = {
+    closed:'查詢目前還沒開放，開放時會在社群公告，再麻煩稍等一下囉～',
+    notfound:'查無資料 😢 請確認會員編號有沒有打對（例如 M0123）',
+    badname:'請填寫本人姓名（至少 2 個字），退款時要跟銀行帳號核對用喔～',
+    badbank:'銀行代碼要是 3 碼數字，再檢查一下～',
+    badacct:'帳號長度不太對喔～台灣的銀行帳號通常是 10～14 碼數字，麻煩對照存摺或銀行 App 再確認一下',
+    norefund:'這筆訂單沒有斷貨退款，不需要填帳號喔！',
+    network:'連線不太順，請再按一次試試看；一直失敗的話請聯絡主理人～'
+  };
+
+  function showErr(el, msg){ el.textContent = msg; el.classList.add('show'); }
+  function hideErr(el){ el.classList.remove('show'); }
+
+  /* ── 查詢 ── */
+  $('btnQuery').addEventListener('click', doQuery);
+  $('mid').addEventListener('keydown', function(e){ if(e.key==='Enter') doQuery(); });
+
+  function doQuery(){
+    hideErr($('qErr'));
+    var id = $('mid').value.trim();
+    if (!id) { showErr($('qErr'), '請先填會員編號喔～'); return; }
+    var btn = $('btnQuery');
+    btn.disabled = true; btn.textContent = '查詢中…';
+    $('result').classList.remove('show');
+    $('dots').classList.add('show');
+    api({action:'query', id:id}).then(function(res){
+      if (!res.ok) { showErr($('qErr'), ERR[res.code] || ERR.network); return; }
+      state.member = res.member; state.data = res.data;
+      state.month = res.month || CFG.month || ''; state.deadline = res.deadline || '';
+      render(res);
+    }).catch(function(){ showErr($('qErr'), ERR.network); })
+      .finally(function(){
+        btn.disabled = false; btn.textContent = '查　詢';
+        $('dots').classList.remove('show');
+      });
+  }
+
+  function itemRow(name, sub, badgeHtml){
+    return '<div class="item"><div class="info"><div class="name">' + esc(name) + '</div>' +
+           (sub ? '<div class="spec">' + sub + '</div>' : '') +
+           '</div><div class="badge">' + badgeHtml + '</div></div>';
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function render(res){
+    var d = state.data;
+    $('rWho').textContent = state.member.id + '・' + state.member.name;
+    $('rMeta').textContent = (state.month ? state.month + ' 訂購明細' : '訂購明細');
+
+    var html = '';
+    (d.items || []).forEach(function(it){
+      var sub = [];
+      if (it.w != null && it.w !== '') sub.push('重量 ' + (+it.w).toFixed(2) + 'kg');
+      sub.push('<b>' + nt(it.p) + '</b> × ' + it.q);
+      if (it.f != null) sub.push('二補 ' + nt(it.f));
+      var badge = it.out
+        ? '<span class="out">T.T 抱歉斷貨了</span>' + (it.r ? '<span class="out-amt">退 ' + nt(it.r) + '</span>' : '')
+        : '<span class="ok">✓</span>';
+      html += itemRow(it.n, sub.join('　'), badge);
+    });
+    (d.extra || []).forEach(function(it){
+      var nm = it.n + (it.s && it.s !== 'x' ? '（' + it.s + '）' : '');
+      html += itemRow(nm, '', '<span class="out">T.T 抱歉斷貨了</span>' + (it.r ? '<span class="out-amt">退 ' + nt(it.r) + '</span>' : ''));
+    });
+    if (!html) html = '<div class="item"><div class="info"><div class="name">這個月沒有出貨品項</div></div></div>';
+    $('rItems').innerHTML = html;
+
+    var t = '';
+    t += trow('商品總金額', nt(d.total));
+    t += trow('二補運費', nt(d.shipTotal));
+    if (d.feeProcess) t += trow('訂單處理費', nt(d.feeProcess));
+    if (d.feePickup) t += trow('超商運費', nt(d.feePickup));
+    if (d.cod) t += trow('取貨付款金額', nt(d.cod), 'grand');
+    if (d.refund) t += trow('斷貨應退金額', '-' + nt(d.refund), 'refund');
+    $('rTotals').innerHTML = t;
+
+    var hasRefund = d.refund > 0;
+    $('refundCard').hidden = !hasRefund;
+    $('allOkNote').classList.toggle('show', !hasRefund);
+    if (hasRefund) {
+      $('rAmt').textContent = nt(d.refund);
+      $('already').classList.toggle('show', !!res.submitted);
+      var dl = state.deadline ? '（' + esc(state.deadline) + '）' : '';
+      $('deadlineNote').innerHTML = '如果在申請退款期限' + dl +
+        '<span class="red">未完成</span>填寫退款帳號，就會在申請退款期限的最後一天，統一轉成購物金，謝謝';
+      hideErr($('sErr'));
+      $('hname').value = ''; $('bank').value = ''; $('acct').value = '';
+    }
+    $('result').classList.add('show');
+    setTimeout(function(){ $('result').scrollIntoView({behavior:'smooth', block:'start'}); }, 80);
+  }
+  function trow(k, v, cls){
+    return '<div class="trow ' + (cls||'') + '"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  }
+
+  /* ── 送出退款帳號 ── */
+  $('btnSubmit').addEventListener('click', function(){
+    hideErr($('sErr'));
+    var hname = $('hname').value.trim();
+    var bank = $('bank').value.trim(), acct = $('acct').value.replace(/[\s-]/g,'');
+    if (hname.length < 2) { showErr($('sErr'), ERR.badname); return; }
+    if (!/^\d{3}$/.test(bank)) { showErr($('sErr'), ERR.badbank); return; }
+    if (!/^\d{10,14}$/.test(acct)) { showErr($('sErr'), ERR.badacct); return; }
+    var btn = $('btnSubmit');
+    btn.disabled = true; btn.textContent = '送出中…';
+    api({action:'submit', id:state.member.id, name:hname, bank:bank, acct:acct})
+      .then(function(res){
+        if (!res.ok) { showErr($('sErr'), ERR[res.code] || ERR.network); return; }
+        $('overlay').classList.add('show');
+        $('already').classList.add('show');
+      })
+      .catch(function(){ showErr($('sErr'), ERR.network); })
+      .finally(function(){ btn.disabled = false; btn.textContent = '確認退款帳號，送出'; });
+  });
+  $('btnClose').addEventListener('click', function(){ $('overlay').classList.remove('show'); });
+})();
+</script>
+</body>
+</html>

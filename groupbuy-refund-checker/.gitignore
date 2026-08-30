@@ -1,0 +1,7 @@
+# 個人設定（含試算表ID/服務網址）不進公開 repo
+設定.json
+網站/config.js
+apps_script/.clasp.json
+
+__pycache__/
+.wrangler/
