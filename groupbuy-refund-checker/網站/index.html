@@ -171,6 +171,21 @@ button.main:disabled{opacity:.55;box-shadow:0 4px 0 #B4401F}
   display:none;margin-top:12px;background:var(--mint-soft);color:var(--mint);
   border-radius:12px;padding:10px 14px;font-size:.88rem;line-height:1.6;text-align:center;font-weight:700;
 }
+.choice{display:flex;gap:10px;margin-top:18px}
+.choice button{
+  flex:1;font:inherit;font-weight:900;font-size:.95rem;letter-spacing:0;
+  padding:13px 2px;border-radius:14px;cursor:pointer;transition:all .15s;
+  background:var(--cream);color:var(--ink-soft);border:2px solid var(--line);
+  white-space:nowrap;
+}
+.choice button.sel{
+  background:linear-gradient(180deg,var(--coral),var(--coral-deep));color:#fff;
+  border-color:var(--coral-deep);box-shadow:0 3px 0 #B4401F;
+}
+.credit-note{
+  margin-top:16px;background:var(--mint-soft);border:1.5px dashed var(--mint);border-radius:12px;
+  padding:12px 14px;font-size:.86rem;line-height:1.8;color:#22715B;text-align:center;
+}
 .already.show{display:block}
 .note{
   margin-top:16px;background:#FFF8EC;border:1.5px dashed var(--amber);border-radius:12px;
@@ -243,16 +258,27 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     <div class="refund-card" id="refundCard" hidden>
       <h2>🥺 斷貨退款登記</h2>
       <div class="refund-amt"><small>應退金額　</small><span id="rAmt"></span></div>
-      <div class="already" id="already">已經收到妳填過的退款帳號囉！<br>要更換帳號的話，重新填寫送出即可～</div>
-      <label for="hname">本人姓名<small>僅用於銀行帳號確認</small></label>
-      <input id="hname" autocomplete="off" placeholder="例如：林小美" maxlength="30">
-      <label for="bank">銀行代碼<small>3 碼數字</small></label>
-      <input id="bank" inputmode="numeric" autocomplete="off" placeholder="例如：822" maxlength="3">
-      <label for="acct">退款帳號<small>10～14 碼數字</small></label>
-      <input id="acct" inputmode="numeric" autocomplete="off" placeholder="請輸入帳號數字" maxlength="20">
-      <div class="note" id="deadlineNote"></div>
-      <button class="main" id="btnSubmit">確認退款帳號，送出</button>
-      <div class="err" id="sErr"></div>
+      <div class="already" id="already"></div>
+      <div class="choice">
+        <button id="chooseRefund">💰 我要退款</button>
+        <button id="chooseCredit">🎁 我要轉購物金</button>
+      </div>
+      <div id="refundForm" hidden>
+        <label for="hname">本人姓名<small>僅用於銀行帳號確認</small></label>
+        <input id="hname" autocomplete="off" placeholder="例如：林小美" maxlength="30">
+        <label for="bank">銀行代碼<small>3 碼數字</small></label>
+        <input id="bank" inputmode="numeric" autocomplete="off" placeholder="例如：822" maxlength="3">
+        <label for="acct">退款帳號<small>10～14 碼數字</small></label>
+        <input id="acct" inputmode="numeric" autocomplete="off" placeholder="請輸入帳號數字" maxlength="20">
+        <div class="note" id="deadlineNote"></div>
+        <button class="main" id="btnSubmit">確認退款帳號，送出</button>
+        <div class="err" id="sErr"></div>
+      </div>
+      <div id="creditForm" hidden>
+        <div class="credit-note">不用填帳號～這筆金額會直接轉成購物金，下次開團就可以折抵使用 🧡</div>
+        <button class="main" id="btnCredit">確認轉購物金，送出</button>
+        <div class="err" id="cErr"></div>
+      </div>
     </div>
     <div class="done-note" id="allOkNote">這次訂購的商品都沒有斷貨，安心等收貨就可以囉 🧡</div>
   </div>
@@ -263,8 +289,8 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="emoji">🧡</div>
-    <h3>已收到退款帳號！</h3>
-    <p>感謝查詢，已收到你的退款帳號，我們會在申請退款期限的最後一天，統一完成退款，感謝耐心等候～謝謝</p>
+    <h3 id="mTitle">已收到退款帳號！</h3>
+    <p id="mText">感謝查詢，已收到你的退款帳號，我們會在申請退款期限的最後一天，統一完成退款，感謝耐心等候～謝謝</p>
     <button id="btnClose">好　的</button>
   </div>
 </div>
@@ -372,11 +398,12 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     $('allOkNote').classList.toggle('show', !hasRefund);
     if (hasRefund) {
       $('rAmt').textContent = nt(d.refund);
-      $('already').classList.toggle('show', !!res.submitted);
+      setAlready(res.submitted);
+      setChoice(null);
       var dl = state.deadline ? '（' + esc(state.deadline) + '）' : '';
       $('deadlineNote').innerHTML = '如果在申請退款期限' + dl +
         '<span class="red">未完成</span>填寫退款帳號，就會在申請退款期限的最後一天，統一轉成購物金，謝謝';
-      hideErr($('sErr'));
+      hideErr($('sErr')); hideErr($('cErr'));
       $('hname').value = ''; $('bank').value = ''; $('acct').value = '';
     }
     $('result').classList.add('show');
@@ -385,6 +412,54 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
   function trow(k, v, cls){
     return '<div class="trow ' + (cls||'') + '"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
   }
+
+  /* ── 退款 / 轉購物金 二選一 ── */
+  function setChoice(kind){
+    $('chooseRefund').classList.toggle('sel', kind === 'refund');
+    $('chooseCredit').classList.toggle('sel', kind === 'credit');
+    $('refundForm').hidden = kind !== 'refund';
+    $('creditForm').hidden = kind !== 'credit';
+  }
+  function setAlready(type){
+    var el = $('already');
+    if (type === '購物金') {
+      el.innerHTML = '已經收到妳「轉購物金」的選擇囉！<br>想改成退款的話，點「我要退款」填帳號送出即可～';
+      el.classList.add('show');
+    } else if (type) {
+      el.innerHTML = '已經收到妳填過的退款帳號囉！<br>要更換的話，重新選擇送出即可～';
+      el.classList.add('show');
+    } else {
+      el.classList.remove('show');
+    }
+  }
+  $('chooseRefund').addEventListener('click', function(){ setChoice('refund'); });
+  $('chooseCredit').addEventListener('click', function(){ setChoice('credit'); });
+
+  function showDone(kind){
+    if (kind === 'credit') {
+      $('mTitle').textContent = '已收到，將轉為購物金！';
+      $('mText').textContent = '感謝查詢，已收到妳「轉購物金」的選擇，我們會在申請退款期限的最後一天統一處理，感謝耐心等候～謝謝';
+    } else {
+      $('mTitle').textContent = '已收到退款帳號！';
+      $('mText').textContent = '感謝查詢，已收到你的退款帳號，我們會在申請退款期限的最後一天，統一完成退款，感謝耐心等候～謝謝';
+    }
+    $('overlay').classList.add('show');
+  }
+
+  /* ── 送出：轉購物金 ── */
+  $('btnCredit').addEventListener('click', function(){
+    hideErr($('cErr'));
+    var btn = $('btnCredit');
+    btn.disabled = true; btn.textContent = '送出中…';
+    api({action:'submit', type:'credit', id:state.member.id})
+      .then(function(res){
+        if (!res.ok) { showErr($('cErr'), ERR[res.code] || ERR.network); return; }
+        showDone('credit');
+        setAlready('購物金');
+      })
+      .catch(function(){ showErr($('cErr'), ERR.network); })
+      .finally(function(){ btn.disabled = false; btn.textContent = '確認轉購物金，送出'; });
+  });
 
   /* ── 送出退款帳號 ── */
   $('btnSubmit').addEventListener('click', function(){
@@ -399,8 +474,8 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     api({action:'submit', id:state.member.id, name:hname, bank:bank, acct:acct})
       .then(function(res){
         if (!res.ok) { showErr($('sErr'), ERR[res.code] || ERR.network); return; }
-        $('overlay').classList.add('show');
-        $('already').classList.add('show');
+        showDone('refund');
+        setAlready('退款');
       })
       .catch(function(){ showErr($('sErr'), ERR.network); })
       .finally(function(){ btn.disabled = false; btn.textContent = '確認退款帳號，送出'; });

@@ -70,27 +70,32 @@ def main():
         print("[完成] 這個月沒有任何斷貨退款會員，不需要產批次退款表。")
         return
 
-    # 2. 已填帳號（同會員取「最新」那筆；保險起見照列序後面覆蓋前面）
+    # 2. 已回覆（同會員取「最新」那筆；H欄類型：退款/購物金，舊資料沒有H欄視為退款）
     replies = {}
-    for r in fetch_values(cfg, f"{cfg.get('回覆分頁','退款帳號回覆')}!A2:G"):
-        r = list(r) + [""] * 7
+    for r in fetch_values(cfg, f"{cfg.get('回覆分頁','退款帳號回覆')}!A2:H"):
+        r = list(r) + [""] * 8
         if str(r[6]).strip() == "最新" and r[1]:
-            replies[str(r[1]).strip()] = {"time": r[0], "bank": str(r[4]), "acct": str(r[5])}
+            replies[str(r[1]).strip()] = {"time": r[0], "bank": str(r[4]), "acct": str(r[5]),
+                                          "type": (str(r[7]).strip() or "退款")}
 
     # 3. 組總表
     header = ["會員編號", "姓名", "應退金額", "銀行代碼", "帳號", "填寫時間", "狀態"]
     table = []
-    filled = 0
+    filled = credit = 0
     for m in refund_members:
         rep = replies.get(m["id"])
-        if rep:
+        if rep and rep["type"] == "購物金":
+            credit += 1
+            table.append([m["id"], m["name"], m["amt"], "", "", rep["time"], "轉購物金"])
+        elif rep:
             filled += 1
             table.append([m["id"], m["name"], m["amt"], rep["bank"], rep["acct"], rep["time"], "已填"])
         else:
             table.append([m["id"], m["name"], m["amt"], "", "", "", "未填"])
-    table.sort(key=lambda x: (x[6] != "已填", x[0]))
+    order = {"已填": 0, "轉購物金": 1, "未填": 2}
+    table.sort(key=lambda x: (order.get(x[6], 9), x[0]))
     total = sum(m["amt"] for m in refund_members)
-    print(f"[統計] 應退會員 {len(refund_members)} 位（已填帳號 {filled}、未填 {len(refund_members)-filled}）；退款總額 {total} 元")
+    print(f"[統計] 應退會員 {len(refund_members)} 位（已填帳號 {filled}、轉購物金 {credit}、未填 {len(refund_members)-filled-credit}）；退款總額 {total} 元")
 
     # 4. 寫 Excel
     import openpyxl
@@ -108,9 +113,12 @@ def main():
     for cell in ws["D"] + ws["E"]:
         cell.number_format = "@"  # 銀行代碼/帳號當文字，保住開頭的 0
     red = Font(color="D93025", bold=True)
+    green = Font(color="2FA383", bold=True)
     for r in range(2, ws.max_row + 1):
         if ws.cell(r, 7).value == "未填":
             ws.cell(r, 7).font = red
+        elif ws.cell(r, 7).value == "轉購物金":
+            ws.cell(r, 7).font = green
     ws.append([])
     ws.append(["合計", "", total, "", "", "", ""])
     ws.cell(ws.max_row, 1).font = Font(bold=True)
