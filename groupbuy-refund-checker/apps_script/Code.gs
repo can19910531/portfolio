@@ -39,13 +39,27 @@ function jsonOut(obj) {
 function getConf() {
   var ss = SpreadsheetApp.openById(SS_ID);
   var v = ss.getSheetByName(SHEET_CONF).getRange('B2:B4').getValues();
-  var deadline = v[1][0];
-  if (deadline instanceof Date) {
-    deadline = Utilities.formatDate(deadline, 'Asia/Taipei', 'M月d日');
+  var raw = v[1][0];
+  var deadline = '', expired = false;
+  var d = null;
+  if (raw instanceof Date) {
+    d = raw;
   } else {
-    deadline = String(deadline || '').trim();
+    var t = String(raw || '').trim().replace(/[.．]/g, '/').replace(/-/g, '/');
+    var m = t.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+    if (m) d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   }
-  return { month: String(v[0][0] || '').trim(), deadline: deadline, open: String(v[2][0] || '').trim() === '是' };
+  if (d) {
+    deadline = Utilities.formatDate(d, 'Asia/Taipei', 'M月d日');
+    // 期限當天整天都還能填；隔天起自動關閉
+    var todayStr = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMMdd');
+    var dlStr = Utilities.formatDate(d, 'Asia/Taipei', 'yyyyMMdd');
+    expired = todayStr > dlStr;
+  } else {
+    deadline = String(raw || '').trim(); // 看不懂的格式：照原樣顯示、不自動關站
+  }
+  return { month: String(v[0][0] || '').trim(), deadline: deadline, expired: expired,
+           open: String(v[2][0] || '').trim() === '是' };
 }
 
 function normId(s) {
@@ -74,6 +88,7 @@ function findMember(id) {
 function handleQuery(req) {
   var conf = getConf();
   if (!conf.open) return jsonOut({ ok: false, code: 'closed' });
+  if (conf.expired) return jsonOut({ ok: false, code: 'expired', deadline: conf.deadline });
   var m = findMember(req.id);
   if (!m) return jsonOut({ ok: false, code: 'notfound' });
   var payload;
@@ -106,6 +121,7 @@ function latestReply(id) {
 function handleSubmit(req) {
   var conf = getConf();
   if (!conf.open) return jsonOut({ ok: false, code: 'closed' });
+  if (conf.expired) return jsonOut({ ok: false, code: 'expired', deadline: conf.deadline });
   var m = findMember(req.id);
   if (!m) return jsonOut({ ok: false, code: 'notfound' });
   if (!(m.refund > 0)) return jsonOut({ ok: false, code: 'norefund' });

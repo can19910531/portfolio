@@ -323,7 +323,9 @@ def run_gws(args_list, body=None, params=None, allow_fail=False):
         cmd += ["--params", json.dumps(params, ensure_ascii=False)]
     if body is not None:
         cmd += ["--json", json.dumps(body, ensure_ascii=False)]
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=False)
+    flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       shell=False, creationflags=flags)
     if r.returncode != 0:
         if allow_fail:
             return None

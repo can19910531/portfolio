@@ -319,6 +319,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
 
   var ERR = {
     closed:'查詢目前還沒開放，開放時會在社群公告，再麻煩稍等一下囉～',
+    expired:'這一團的斷貨退款登記已截止囉～沒有填退款帳號的部分，已統一轉成購物金；有問題請聯絡主理人 🧡',
     notfound:'查無資料 😢 請確認會員編號有沒有打對（例如 M0123）',
     badname:'請填寫本人姓名（至少 2 個字），退款時要跟銀行帳號核對用喔～',
     badbank:'銀行代碼要是 3 碼數字，再檢查一下～',
@@ -329,6 +330,12 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
 
   function showErr(el, msg){ el.textContent = msg; el.classList.add('show'); }
   function hideErr(el){ el.classList.remove('show'); }
+  function errMsg(res){
+    if (res.code === 'expired' && res.deadline) {
+      return '這一團的斷貨退款登記已在 ' + res.deadline + ' 截止囉～沒有填退款帳號的部分，已統一轉成購物金；有問題請聯絡主理人 🧡';
+    }
+    return ERR[res.code] || ERR.network;
+  }
 
   /* ── 查詢 ── */
   $('btnQuery').addEventListener('click', doQuery);
@@ -343,7 +350,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     $('result').classList.remove('show');
     $('dots').classList.add('show');
     api({action:'query', id:id}).then(function(res){
-      if (!res.ok) { showErr($('qErr'), ERR[res.code] || ERR.network); return; }
+      if (!res.ok) { showErr($('qErr'), errMsg(res)); return; }
       state.member = res.member; state.data = res.data;
       state.month = res.month || CFG.month || ''; state.deadline = res.deadline || '';
       render(res);
@@ -453,7 +460,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     btn.disabled = true; btn.textContent = '送出中…';
     api({action:'submit', type:'credit', id:state.member.id})
       .then(function(res){
-        if (!res.ok) { showErr($('cErr'), ERR[res.code] || ERR.network); return; }
+        if (!res.ok) { showErr($('cErr'), errMsg(res)); return; }
         showDone('credit');
         setAlready('購物金');
       })
@@ -473,7 +480,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
     btn.disabled = true; btn.textContent = '送出中…';
     api({action:'submit', id:state.member.id, name:hname, bank:bank, acct:acct})
       .then(function(res){
-        if (!res.ok) { showErr($('sErr'), ERR[res.code] || ERR.network); return; }
+        if (!res.ok) { showErr($('sErr'), errMsg(res)); return; }
         showDone('refund');
         setAlready('退款');
       })

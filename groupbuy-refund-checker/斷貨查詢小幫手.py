@@ -24,8 +24,23 @@ import webbrowser
 
 import customtkinter as ctk
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+# 打包成 exe 時（PyInstaller），程式位置要以 exe 所在資料夾為準，而不是解壓的暫存夾
+if getattr(sys, "frozen", False):
+    BASE = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    BASE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(BASE)
+
+
+def _python_exe():
+    """跑底層腳本用的 Python：exe 模式下 sys.executable 是 exe 自己，要另找系統的 python。"""
+    if not getattr(sys, "frozen", False):
+        return sys.executable
+    import shutil
+    p = shutil.which("python") or shutil.which("py")
+    if not p:
+        return None
+    return p
 
 # ── 品牌色（跟查詢網站同一套奶油×珊瑚橘）──
 CREAM = "#FFF6EA"
@@ -399,10 +414,16 @@ class App(ctk.CTk):
 
     def _worker(self, script, month_path):
         env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
+        py = _python_exe()
+        if not py:
+            self.log_q.put("[錯誤] 找不到 Python，請確認電腦有安裝 Python（腳本執行需要它）。")
+            self.log_q.put("__JOB_DONE__")
+            return
+        flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
         try:
-            p = subprocess.Popen([sys.executable, os.path.join(BASE, script), "--month", month_path],
+            p = subprocess.Popen([py, os.path.join(BASE, script), "--month", month_path],
                                  cwd=BASE, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 text=True, encoding="utf-8", errors="replace")
+                                 text=True, encoding="utf-8", errors="replace", creationflags=flags)
             for line in p.stdout:
                 self.log_q.put(line.rstrip())
             code = p.wait()
