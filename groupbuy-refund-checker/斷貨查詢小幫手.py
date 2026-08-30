@@ -10,6 +10,8 @@
 啟動：  python 斷貨查詢小幫手.py
 截圖：  python 斷貨查詢小幫手.py --screenshot 輸出.png   （作品集展示用）
 """
+import calendar
+import datetime
 import glob
 import json
 import os
@@ -47,6 +49,108 @@ def load_cfg():
         return {}
 
 
+def load_upd():
+    """載入 更新斷貨查詢網站.py 模組，共用它的 run_gws（試算表讀寫）。"""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_upd", os.path.join(BASE, "更新斷貨查詢網站.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def parse_date(text):
+    """接受 2026-09-10 / 2026/9/10 / 9/10（補今年）等寫法，回傳 date 或 None。"""
+    t = str(text or "").strip().replace("－", "-").replace("．", ".")
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d"):
+        try:
+            return datetime.datetime.strptime(t, fmt).date()
+        except ValueError:
+            pass
+    m = re.match(r"^(\d{1,2})[/\-.](\d{1,2})$", t)
+    if m:
+        today = datetime.date.today()
+        try:
+            d = datetime.date(today.year, int(m.group(1)), int(m.group(2)))
+            return d if d >= today else datetime.date(today.year + 1, int(m.group(1)), int(m.group(2)))
+        except ValueError:
+            return None
+    return None
+
+
+class CalendarPopup(ctk.CTkToplevel):
+    """點選式月曆（大按鈕，好按）。選好日期回呼 on_pick(date)。"""
+
+    def __init__(self, master, init_date=None, on_pick=None):
+        super().__init__(master)
+        self.title("選退款期限")
+        self.configure(fg_color=PAPER)
+        self.resizable(False, False)
+        self.on_pick = on_pick
+        d = init_date or datetime.date.today()
+        self.year, self.month = d.year, d.month
+        self.transient(master)
+        self.grab_set()
+        # 開在主視窗中間
+        self.update_idletasks()
+        x = master.winfo_rootx() + master.winfo_width() // 2 - 190
+        y = master.winfo_rooty() + 160
+        self.geometry(f"380x420+{max(x, 0)}+{max(y, 0)}")
+        self._draw()
+
+    def _draw(self):
+        for w in self.winfo_children():
+            w.destroy()
+        head = ctk.CTkFrame(self, fg_color="transparent")
+        head.pack(fill="x", padx=14, pady=(14, 6))
+        ctk.CTkButton(head, text="◀", width=44, height=40, command=lambda: self._move(-1),
+                      fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
+                      font=ctk.CTkFont("Microsoft JhengHei UI", 16, "bold")).pack(side="left")
+        ctk.CTkLabel(head, text=f"{self.year} 年 {self.month} 月",
+                     font=ctk.CTkFont("Microsoft JhengHei UI", 18, "bold"),
+                     text_color=INK).pack(side="left", expand=True)
+        ctk.CTkButton(head, text="▶", width=44, height=40, command=lambda: self._move(1),
+                      fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
+                      font=ctk.CTkFont("Microsoft JhengHei UI", 16, "bold")).pack(side="right")
+
+        grid = ctk.CTkFrame(self, fg_color="transparent")
+        grid.pack(padx=14, pady=(0, 14))
+        for i, wd in enumerate(["一", "二", "三", "四", "五", "六", "日"]):
+            ctk.CTkLabel(grid, text=wd, width=46,
+                         font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold"),
+                         text_color=(RED if i >= 5 else INK_SOFT)).grid(row=0, column=i, pady=(0, 4))
+        today = datetime.date.today()
+        for r, week in enumerate(calendar.Calendar().monthdayscalendar(self.year, self.month), start=1):
+            for c, day in enumerate(week):
+                if day == 0:
+                    continue
+                d = datetime.date(self.year, self.month, day)
+                is_today = d == today
+                btn = ctk.CTkButton(
+                    grid, text=str(day), width=46, height=44,
+                    command=lambda dd=d: self._pick(dd),
+                    fg_color=(CORAL if is_today else CREAM),
+                    text_color=("#FFFFFF" if is_today else INK),
+                    hover_color=CORAL_DEEP,
+                    border_width=0 if is_today else 1, border_color=LINE,
+                    font=ctk.CTkFont("Microsoft JhengHei UI", 14, "bold" if is_today else "normal"))
+                btn.grid(row=r, column=c, padx=2, pady=2)
+
+    def _move(self, step):
+        m = self.month + step
+        if m < 1:
+            self.year, self.month = self.year - 1, 12
+        elif m > 12:
+            self.year, self.month = self.year + 1, 1
+        else:
+            self.month = m
+        self._draw()
+
+    def _pick(self, d):
+        if self.on_pick:
+            self.on_pick(d)
+        self.destroy()
+
+
 def scan_months(monthly_dir):
     """掃描月團資料夾，回傳 [(名稱, 有出貨明細, 有斷貨單)]，新的在前。"""
     out = []
@@ -62,19 +166,22 @@ def scan_months(monthly_dir):
 
 
 class App(ctk.CTk):
-    def __init__(self):
+    def __init__(self, demo=False):
         super().__init__()
         self.title("團購斷貨查詢網站小幫手")
-        self.geometry("720x640")
-        self.minsize(640, 560)
+        self.geometry("720x700")
+        self.minsize(640, 620)
         self.configure(fg_color=CREAM)
         self.cfg = load_cfg()
         self.months = []
         self.running = False
         self.log_q = queue.Queue()
+        self._upd = None
         self._build()
         self.rescan()
         self.after(100, self._drain_log)
+        if not demo:
+            threading.Thread(target=self._load_deadline, daemon=True).start()
 
     # ── 版面 ──
     def _build(self):
@@ -126,6 +233,27 @@ class App(ctk.CTk):
         self.status_lbl = ctk.CTkLabel(row2, text="", font=ctk.CTkFont("Microsoft JhengHei UI", 12),
                                        text_color=INK_SOFT)
         self.status_lbl.pack(side="left", padx=(12, 0))
+
+        row3 = ctk.CTkFrame(card, fg_color="transparent")
+        row3.pack(fill="x", padx=16, pady=(8, 6))
+        ctk.CTkLabel(row3, text="退款期限", width=96, anchor="w",
+                     font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
+                     text_color=INK).pack(side="left")
+        self.deadline_var = ctk.StringVar(value="")
+        self.deadline_entry = ctk.CTkEntry(row3, textvariable=self.deadline_var, width=130,
+                                           placeholder_text="讀取中…",
+                                           font=ctk.CTkFont("Microsoft JhengHei UI", 13),
+                                           fg_color=CREAM, border_color=LINE, text_color=INK)
+        self.deadline_entry.pack(side="left", padx=(8, 8))
+        ctk.CTkButton(row3, text="📅 選日期", width=92, command=self.pick_deadline,
+                      fg_color=CORAL, hover_color=CORAL_DEEP,
+                      font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold")).pack(side="left", padx=(0, 8))
+        self.btn_save_dl = ctk.CTkButton(row3, text="💾 儲存期限", width=96, command=self.save_deadline,
+                                         fg_color=MINT, hover_color="#22715B",
+                                         font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold"))
+        self.btn_save_dl.pack(side="left")
+        ctk.CTkLabel(row3, text="存檔後手機網站立即生效", font=ctk.CTkFont("Microsoft JhengHei UI", 11),
+                     text_color=INK_SOFT).pack(side="left", padx=(10, 0))
 
         rowb = ctk.CTkFrame(card, fg_color="transparent")
         rowb.pack(fill="x", padx=16, pady=(10, 16))
@@ -182,6 +310,61 @@ class App(ctk.CTk):
         ok = cur[1]
         self.status_lbl.configure(text="　".join(parts), text_color=(MINT if ok else RED))
 
+    # ── 退款期限 ──
+    def _get_upd(self):
+        if self._upd is None:
+            self._upd = load_upd()
+        return self._upd
+
+    def _load_deadline(self):
+        """啟動時從試算表「設定」B3 讀目前的退款期限，填進欄位。"""
+        try:
+            upd = self._get_upd()
+            cfg = load_cfg()
+            out = upd.run_gws(["sheets", "spreadsheets", "values", "get"],
+                              params={"spreadsheetId": cfg["spreadsheetId"],
+                                      "range": f"{cfg.get('設定分頁', '設定')}!B3"},
+                              allow_fail=True)
+            if out:
+                data = json.loads(out[out.index("{"):])
+                val = (data.get("values") or [[""]])[0][0]
+                self.deadline_var.set(str(val))
+                self.log_q.put(f"目前設定的退款期限：{val or '（未設定）'}")
+        except Exception as e:
+            self.log_q.put(f"[提醒] 讀不到目前的退款期限（{e}），可直接填新的再按儲存。")
+
+    def pick_deadline(self):
+        CalendarPopup(self, init_date=parse_date(self.deadline_var.get()),
+                      on_pick=lambda d: self.deadline_var.set(d.strftime("%Y-%m-%d")))
+
+    def save_deadline(self, silent=False):
+        d = parse_date(self.deadline_var.get())
+        if not d:
+            self._log("[錯誤] 退款期限看不懂，請用「📅 選日期」點選，或填 2026-09-10 這種格式。")
+            return
+        if d < datetime.date.today():
+            self._log(f"[錯誤] 退款期限 {d} 已經是過去的日期了，請再確認。")
+            return
+        self.btn_save_dl.configure(state="disabled", text="儲存中…")
+        threading.Thread(target=self._save_deadline_worker, args=(d,), daemon=True).start()
+
+    def _save_deadline_worker(self, d):
+        try:
+            upd = self._get_upd()
+            cfg = load_cfg()
+            # 用 USER_ENTERED 寫 2026/09/10 → 試算表存成真正的日期，網站會顯示「9月10日」
+            upd.run_gws(["sheets", "spreadsheets", "values", "update"],
+                        params={"spreadsheetId": cfg["spreadsheetId"],
+                                "range": f"{cfg.get('設定分頁', '設定')}!B3",
+                                "valueInputOption": "USER_ENTERED"},
+                        body={"values": [[d.strftime("%Y/%m/%d")]]})
+            self.log_q.put(f"✅ 退款期限已存：{d.year}年{d.month}月{d.day}日（手機網站的紅字提醒立即生效）")
+        except SystemExit:
+            self.log_q.put("[錯誤] 退款期限存檔失敗，請確認網路後再按一次「💾 儲存期限」。")
+        except Exception as e:
+            self.log_q.put(f"[錯誤] 退款期限存檔失敗：{e}")
+        self.log_q.put("__DL_DONE__")
+
     def open_site(self):
         url = load_cfg().get("pages_url") or ""
         if url:
@@ -201,6 +384,10 @@ class App(ctk.CTk):
         if kind == "deploy" and not cur[1]:
             self._log(f"[錯誤] {month} 還沒有出貨明細（請先跑步驟5），無法部署。")
             return
+        if kind == "deploy":
+            d = parse_date(self.deadline_var.get())
+            if not d or d < datetime.date.today():
+                self._log("[提醒] 退款期限還沒設定（或已過期）——部署照常進行，記得用「📅 選日期」選好後按「💾 儲存期限」。")
         script = "更新斷貨查詢網站.py" if kind == "deploy" else "匯出批次退款表.py"
         month_path = os.path.join(self.path_var.get(), month)
         self.running = True
@@ -232,6 +419,8 @@ class App(ctk.CTk):
                     self.running = False
                     self.btn_deploy.configure(state="normal")
                     self.btn_export.configure(state="normal")
+                elif line == "__DL_DONE__":
+                    self.btn_save_dl.configure(state="normal", text="💾 儲存期限")
                 else:
                     self._log(line)
         except queue.Empty:
@@ -247,13 +436,13 @@ class App(ctk.CTk):
 
 def screenshot_mode(out_path):
     """作品集用：開視窗（填入示範資料）→ 存一張截圖 → 自動關閉。"""
-    app = App()
-    # 示範狀態：不顯示真實路徑與資料
+    app = App(demo=True)
     app.path_var.set(r"D:\團購資料\每月資料")
     app.months = [("2026-07_7月團", True, True), ("2026-06_6月團", True, True)]
     app.month_menu.configure(values=[m[0] for m in app.months])
     app.month_var.set("2026-07_7月團")
     app.update_status()
+    app.deadline_var.set("2026-08-15")
     app.log.configure(state="normal"); app.log.delete("1.0", "end"); app.log.configure(state="disabled")
     app._log("準備就緒。選好月團後按「🚀 更新並部署查詢網站」。")
     app._log("掃描 D:\團購資料\每月資料 → 找到 2 個月團資料夾")
