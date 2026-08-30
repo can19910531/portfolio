@@ -320,7 +320,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
 
   var ERR = {
     closed:'查詢目前還沒開放，開放時會在社群公告，再麻煩稍等一下囉～',
-    expired:'這一團的斷貨退款登記已截止囉～沒有填退款帳號的部分，已統一轉成購物金；有問題請聯絡主理人 🧡',
+    expired:'這一團的斷貨退款登記已截止囉～沒有填退款帳號的部分，已統一轉成購物金；有任何問題請私訊官方LINE，謝謝～🧡',
     notfound:'查無資料 😢 請確認會員編號有沒有打對（例如 M0123）',
     badname:'請填寫本人姓名（至少 2 個字），退款時要跟銀行帳號核對用喔～',
     badbank:'銀行代碼要是 3 碼數字，再檢查一下～',
@@ -333,7 +333,7 @@ footer{margin-top:40px;color:#CBB79F;font-size:.75rem;letter-spacing:.2em;text-a
   function hideErr(el){ el.classList.remove('show'); }
   function errMsg(res){
     if (res.code === 'expired' && res.deadline) {
-      return '這一團的斷貨退款登記已在 ' + res.deadline + ' 截止囉～沒有填退款帳號的部分，已統一轉成購物金；有問題請聯絡主理人 🧡';
+      return '這一團的斷貨退款登記已在 ' + res.deadline + ' 截止囉～沒有填退款帳號的部分，已統一轉成購物金；有任何問題請私訊官方LINE，謝謝～🧡';
     }
     return ERR[res.code] || ERR.network;
   }
