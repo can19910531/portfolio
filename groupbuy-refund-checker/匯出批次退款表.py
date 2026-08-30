@@ -79,21 +79,21 @@ def main():
                                           "type": (str(r[7]).strip() or "退款")}
 
     # 3. 組總表
-    header = ["會員編號", "姓名", "應退金額", "銀行代碼", "帳號", "填寫時間", "狀態"]
+    header = ["會員編號", "姓名", "應退金額", "客人選擇", "銀行代碼", "帳號", "填寫時間", "狀態"]
     table = []
     filled = credit = 0
     for m in refund_members:
         rep = replies.get(m["id"])
         if rep and rep["type"] == "購物金":
             credit += 1
-            table.append([m["id"], m["name"], m["amt"], "", "", rep["time"], "轉購物金"])
+            table.append([m["id"], m["name"], m["amt"], "購物金", "", "", rep["time"], "轉購物金"])
         elif rep:
             filled += 1
-            table.append([m["id"], m["name"], m["amt"], rep["bank"], rep["acct"], rep["time"], "已填"])
+            table.append([m["id"], m["name"], m["amt"], "退款", rep["bank"], rep["acct"], rep["time"], "已填"])
         else:
-            table.append([m["id"], m["name"], m["amt"], "", "", "", "未填"])
+            table.append([m["id"], m["name"], m["amt"], "未回覆", "", "", "", "未填"])
     order = {"已填": 0, "轉購物金": 1, "未填": 2}
-    table.sort(key=lambda x: (order.get(x[6], 9), x[0]))
+    table.sort(key=lambda x: (order.get(x[7], 9), x[0]))
     total = sum(m["amt"] for m in refund_members)
     print(f"[統計] 應退會員 {len(refund_members)} 位（已填帳號 {filled}、轉購物金 {credit}、未填 {len(refund_members)-filled-credit}）；退款總額 {total} 元")
 
@@ -110,20 +110,22 @@ def main():
         c.alignment = Alignment(horizontal="center")
     for row in table:
         ws.append(row)
-    for cell in ws["D"] + ws["E"]:
+    for cell in ws["E"] + ws["F"]:
         cell.number_format = "@"  # 銀行代碼/帳號當文字，保住開頭的 0
     red = Font(color="D93025", bold=True)
     green = Font(color="2FA383", bold=True)
     for r in range(2, ws.max_row + 1):
-        if ws.cell(r, 7).value == "未填":
-            ws.cell(r, 7).font = red
-        elif ws.cell(r, 7).value == "轉購物金":
-            ws.cell(r, 7).font = green
+        if ws.cell(r, 8).value == "未填":
+            ws.cell(r, 8).font = red
+            ws.cell(r, 4).font = red
+        elif ws.cell(r, 8).value == "轉購物金":
+            ws.cell(r, 8).font = green
+            ws.cell(r, 4).font = green
     ws.append([])
     ws.append(["合計", "", total, "", "", "", ""])
     ws.cell(ws.max_row, 1).font = Font(bold=True)
     ws.cell(ws.max_row, 3).font = Font(bold=True)
-    widths = [12, 16, 12, 10, 20, 20, 8]
+    widths = [12, 16, 12, 10, 10, 20, 20, 10]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
     out_path = os.path.join(month_dir, "斷貨單", "批次退款表.xlsx")
