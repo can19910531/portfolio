@@ -6,9 +6,9 @@
   查詢資料 分頁 → 誰有應退金額（斷貨單上的全部會員，含沒來填帳號的）
   退款帳號回覆 分頁 → 誰填了帳號（同會員多筆以「最新」那筆為準）
 
-產出兩份（內容相同）：
-  1. Excel：每月資料\{月團}\斷貨單\批次退款表.xlsx（就地覆寫，跑完自動同步雲端）
-  2. 試算表新增/更新「批次退款總表」分頁（打開試算表就能看）
+產出：Excel 每月資料\{月團}\斷貨單\批次退款表.xlsx（就地覆寫，跑完自動同步雲端）——
+要轉帳那天的「最終定版」。平時想看即時進度，開試算表的「批次退款總表」分頁
+（2026-08-30 起是公式自動連動，客人一送出馬上更新，本腳本不再覆寫它）。
 
 用法：
   python 匯出批次退款表.py                    # 自動抓最新月團
@@ -134,22 +134,10 @@ def main():
         sys.exit(1)
     print(f"[完成] Excel 已存：{out_path}")
 
-    # 5. 回寫試算表「批次退款總表」分頁（沒有就建）
-    sid = cfg["spreadsheetId"]
-    if _upd.run_gws(["sheets", "spreadsheets", "batchUpdate"],
-                    params={"spreadsheetId": sid},
-                    body={"requests": [{"addSheet": {"properties": {"title": "批次退款總表"}}}]},
-                    allow_fail=True) is not None:
-        print("[info] 已建立 批次退款總表 分頁")
-    _upd.run_gws(["sheets", "spreadsheets", "values", "clear"],
-                 params={"spreadsheetId": sid, "range": "批次退款總表!A1:H"}, body={})
-    values = [header] + [[str(x) for x in row] for row in table] + [[], ["合計", "", str(total)]]
-    _upd.run_gws(["sheets", "spreadsheets", "values", "update"],
-                 params={"spreadsheetId": sid, "range": "批次退款總表!A1", "valueInputOption": "RAW"},
-                 body={"values": values})
-    print("[完成] 試算表「批次退款總表」分頁已更新")
+    # （試算表的「批次退款總表」分頁是公式即時連動，這裡不需要再更新它）
+    print("[info] 雲端「批次退款總表」分頁是即時公式，不需匯出也隨時是最新。")
 
-    # 6. 同步雲端
+    # 5. 同步雲端
     if not args.no_upload:
         _upd_sync(out_path)
 
