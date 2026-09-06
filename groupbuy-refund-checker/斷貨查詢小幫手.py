@@ -37,10 +37,25 @@ def _python_exe():
     if not getattr(sys, "frozen", False):
         return sys.executable
     import shutil
-    p = shutil.which("python") or shutil.which("py")
+    p = shutil.which("python") or shutil.which("python3") or shutil.which("py")
     if not p:
         return None
     return p
+
+
+def _f(size, weight=None):
+    """跨平台字型：Windows 用微軟正黑體、Mac 用蘋方，其他系統交給 Tk 預設。"""
+    import platform
+    fam = {"Windows": "Microsoft JhengHei UI", "Darwin": "PingFang TC"}.get(platform.system(), "")
+    if weight:
+        return ctk.CTkFont(fam, size, weight) if fam else ctk.CTkFont(size=size, weight=weight)
+    return ctk.CTkFont(fam, size) if fam else ctk.CTkFont(size=size)
+
+
+def _fmono(size):
+    import platform
+    fam = {"Windows": "Consolas", "Darwin": "Menlo"}.get(platform.system(), "Courier")
+    return ctk.CTkFont(fam, size)
 
 # ── 品牌色（跟查詢網站同一套奶油×珊瑚橘）──
 CREAM = "#FFF6EA"
@@ -119,19 +134,19 @@ class CalendarPopup(ctk.CTkToplevel):
         head.pack(fill="x", padx=14, pady=(14, 6))
         ctk.CTkButton(head, text="◀", width=44, height=40, command=lambda: self._move(-1),
                       fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
-                      font=ctk.CTkFont("Microsoft JhengHei UI", 16, "bold")).pack(side="left")
+                      font=_f(16, "bold")).pack(side="left")
         ctk.CTkLabel(head, text=f"{self.year} 年 {self.month} 月",
-                     font=ctk.CTkFont("Microsoft JhengHei UI", 18, "bold"),
+                     font=_f(18, "bold"),
                      text_color=INK).pack(side="left", expand=True)
         ctk.CTkButton(head, text="▶", width=44, height=40, command=lambda: self._move(1),
                       fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
-                      font=ctk.CTkFont("Microsoft JhengHei UI", 16, "bold")).pack(side="right")
+                      font=_f(16, "bold")).pack(side="right")
 
         grid = ctk.CTkFrame(self, fg_color="transparent")
         grid.pack(padx=14, pady=(0, 14))
         for i, wd in enumerate(["一", "二", "三", "四", "五", "六", "日"]):
             ctk.CTkLabel(grid, text=wd, width=46,
-                         font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold"),
+                         font=_f(12, "bold"),
                          text_color=(RED if i >= 5 else INK_SOFT)).grid(row=0, column=i, pady=(0, 4))
         today = datetime.date.today()
         for r, week in enumerate(calendar.Calendar().monthdayscalendar(self.year, self.month), start=1):
@@ -147,7 +162,7 @@ class CalendarPopup(ctk.CTkToplevel):
                     text_color=("#FFFFFF" if is_today else INK),
                     hover_color=CORAL_DEEP,
                     border_width=0 if is_today else 1, border_color=LINE,
-                    font=ctk.CTkFont("Microsoft JhengHei UI", 14, "bold" if is_today else "normal"))
+                    font=_f(14, "bold" if is_today else "normal"))
                 btn.grid(row=r, column=c, padx=2, pady=2)
 
     def _move(self, step):
@@ -203,11 +218,11 @@ class App(ctk.CTk):
         pad = {"padx": 24, "pady": (0, 0)}
 
         head = ctk.CTkLabel(self, text="🧡 團購斷貨查詢網站小幫手",
-                            font=ctk.CTkFont("Microsoft JhengHei UI", 22, "bold"),
+                            font=_f(22, "bold"),
                             text_color=INK)
         head.pack(anchor="w", padx=24, pady=(20, 2))
         sub = ctk.CTkLabel(self, text="選好月團按下部署，查詢網站的內容就會換成那個月的資料（網址永遠不變）",
-                           font=ctk.CTkFont("Microsoft JhengHei UI", 12),
+                           font=_f(12),
                            text_color=INK_SOFT)
         sub.pack(anchor="w", padx=24, pady=(0, 14))
 
@@ -218,56 +233,56 @@ class App(ctk.CTk):
         row1 = ctk.CTkFrame(card, fg_color="transparent")
         row1.pack(fill="x", padx=16, pady=(16, 8))
         ctk.CTkLabel(row1, text="每月資料位置", width=96, anchor="w",
-                     font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
+                     font=_f(13, "bold"),
                      text_color=INK).pack(side="left")
         self.path_var = ctk.StringVar(value=os.path.join(ROOT, "每月資料"))
         self.path_entry = ctk.CTkEntry(row1, textvariable=self.path_var,
-                                       font=ctk.CTkFont("Microsoft JhengHei UI", 12),
+                                       font=_f(12),
                                        fg_color=CREAM, border_color=LINE, text_color=INK)
         self.path_entry.pack(side="left", fill="x", expand=True, padx=(8, 8))
         ctk.CTkButton(row1, text="瀏覽…", width=72, command=self.browse,
                       fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
-                      font=ctk.CTkFont("Microsoft JhengHei UI", 12)).pack(side="left")
+                      font=_f(12)).pack(side="left")
 
         row2 = ctk.CTkFrame(card, fg_color="transparent")
         row2.pack(fill="x", padx=16, pady=(8, 6))
         ctk.CTkLabel(row2, text="月團", width=96, anchor="w",
-                     font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
+                     font=_f(13, "bold"),
                      text_color=INK).pack(side="left")
         self.month_var = ctk.StringVar(value="（掃描中…）")
         self.month_menu = ctk.CTkOptionMenu(row2, variable=self.month_var, values=["—"],
                                             command=lambda _v: self.update_status(),
                                             fg_color=CORAL, button_color=CORAL_DEEP,
                                             button_hover_color="#B4401F",
-                                            font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
-                                            dropdown_font=ctk.CTkFont("Microsoft JhengHei UI", 12))
+                                            font=_f(13, "bold"),
+                                            dropdown_font=_f(12))
         self.month_menu.pack(side="left", padx=(8, 8))
         ctk.CTkButton(row2, text="↻ 重新掃描", width=96, command=self.rescan,
                       fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
-                      font=ctk.CTkFont("Microsoft JhengHei UI", 12)).pack(side="left")
-        self.status_lbl = ctk.CTkLabel(row2, text="", font=ctk.CTkFont("Microsoft JhengHei UI", 12),
+                      font=_f(12)).pack(side="left")
+        self.status_lbl = ctk.CTkLabel(row2, text="", font=_f(12),
                                        text_color=INK_SOFT)
         self.status_lbl.pack(side="left", padx=(12, 0))
 
         row3 = ctk.CTkFrame(card, fg_color="transparent")
         row3.pack(fill="x", padx=16, pady=(8, 6))
         ctk.CTkLabel(row3, text="退款期限", width=96, anchor="w",
-                     font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
+                     font=_f(13, "bold"),
                      text_color=INK).pack(side="left")
         self.deadline_var = ctk.StringVar(value="")
         self.deadline_entry = ctk.CTkEntry(row3, textvariable=self.deadline_var, width=130,
                                            placeholder_text="讀取中…",
-                                           font=ctk.CTkFont("Microsoft JhengHei UI", 13),
+                                           font=_f(13),
                                            fg_color=CREAM, border_color=LINE, text_color=INK)
         self.deadline_entry.pack(side="left", padx=(8, 8))
         ctk.CTkButton(row3, text="📅 選日期", width=92, command=self.pick_deadline,
                       fg_color=CORAL, hover_color=CORAL_DEEP,
-                      font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold")).pack(side="left", padx=(0, 8))
+                      font=_f(12, "bold")).pack(side="left", padx=(0, 8))
         self.btn_save_dl = ctk.CTkButton(row3, text="💾 儲存期限", width=96, command=self.save_deadline,
                                          fg_color=MINT, hover_color="#22715B",
-                                         font=ctk.CTkFont("Microsoft JhengHei UI", 12, "bold"))
+                                         font=_f(12, "bold"))
         self.btn_save_dl.pack(side="left")
-        ctk.CTkLabel(row3, text="存檔後手機網站立即生效", font=ctk.CTkFont("Microsoft JhengHei UI", 11),
+        ctk.CTkLabel(row3, text="存檔後手機網站立即生效", font=_f(11),
                      text_color=INK_SOFT).pack(side="left", padx=(10, 0))
 
         rowb = ctk.CTkFrame(card, fg_color="transparent")
@@ -275,23 +290,23 @@ class App(ctk.CTk):
         self.btn_deploy = ctk.CTkButton(rowb, text="🚀 更新並部署查詢網站", height=44,
                                         command=lambda: self.run_job("deploy"),
                                         fg_color=CORAL, hover_color=CORAL_DEEP,
-                                        font=ctk.CTkFont("Microsoft JhengHei UI", 15, "bold"))
+                                        font=_f(15, "bold"))
         self.btn_deploy.pack(side="left", fill="x", expand=True, padx=(0, 8))
         self.btn_export = ctk.CTkButton(rowb, text="📋 匯出批次退款表", height=44,
                                         command=lambda: self.run_job("export"),
                                         fg_color=MINT, hover_color="#22715B",
-                                        font=ctk.CTkFont("Microsoft JhengHei UI", 15, "bold"))
+                                        font=_f(15, "bold"))
         self.btn_export.pack(side="left", fill="x", expand=True, padx=(0, 8))
         self.btn_open = ctk.CTkButton(rowb, text="🌐 打開網站", height=44, width=110,
                                       command=self.open_site,
                                       fg_color=LINE, hover_color="#DCC5A8", text_color=INK,
-                                      font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"))
+                                      font=_f(13, "bold"))
         self.btn_open.pack(side="left")
 
-        ctk.CTkLabel(self, text="執行紀錄", font=ctk.CTkFont("Microsoft JhengHei UI", 13, "bold"),
+        ctk.CTkLabel(self, text="執行紀錄", font=_f(13, "bold"),
                      text_color=INK).pack(anchor="w", padx=26, pady=(14, 4))
         self.log = ctk.CTkTextbox(self, fg_color="#2B241E", text_color="#F5E8D5",
-                                  font=ctk.CTkFont("Consolas", 12), corner_radius=12)
+                                  font=_fmono(12), corner_radius=12)
         self.log.pack(fill="both", expand=True, padx=24, pady=(0, 20))
         self.log.configure(state="disabled")
         self._log("準備就緒。選好月團後按「🚀 更新並部署查詢網站」。")
