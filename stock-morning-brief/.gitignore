@@ -15,3 +15,7 @@ __pycache__/
 # 雜項
 ~$*
 .brief.lock
+
+# 每週選股：大戶持股存檔、觀察名單（你自己的資料，請另外備份）；行情快取
+data/
+backtest_cache/

@@ -69,7 +69,25 @@ What time each day? (Taiwan market opens 09:00; 08:00 recommended.)
 - `none`: push to Telegram only, keep nothing
 - `gdrive` (advanced): also upload to Google Drive; requires installing and authorizing the `gws` CLI, ~10 extra minutes. Only walk through this if chosen.
 
-### Q8 Telegram
+### Q8 Weekly stock screener (only if Q1 includes Taiwan; skip for US-only)
+
+⚠️ **Lead with the bad news from the backtest before asking** — don't just sell the upside. Suggested phrasing:
+
+> "On Saturdays the brief can add a 'weekly screener' section: from the 200 largest Taiwan stocks,
+> it lists names at a 52-week high, where 400-lot+ holders are adding, and with no negative news —
+> all three gates must pass, with a rule-based stop and exit alerts.
+>
+> To be straight with you: over 10 years of backtesting, its picks do beat the average large cap,
+> **but used instead of simply holding 0050 it returned less, with roughly double the drawdown**;
+> the win rate is about 40% and over half the trades get stopped out. It's a way to narrow down
+> what to research, not a replacement for a core holding. Want it on?"
+
+→ `screener.enabled: true / false`
+- If yes, ask about the 'lottery' section (trend-turn signals; no statistical edge in the backtest) → `screener.lottery`
+- **Do not give position-sizing or allocation advice** — that's the user's call
+- Full study: `research/results_weekly.md`
+
+### Q9 Telegram
 Guide the user through @BotFather (`/newbot`), collect the token, copy
 `.env.example` to `.env`, fill in the token, then call `getUpdates` to resolve
 the chat_id after the user messages the bot once. The token is a secret: keep it
@@ -79,10 +97,11 @@ out of anything that gets committed or shared; verify `.env` is gitignored.
 
 1. Write `config.yaml` based on the answers (see `config.example.yaml` for fields).
 2. `python notify.py --text "setup test ✅"` — the user must actually receive it.
-3. `python brief.py --no-push` — confirm charts, health-check and the brief appear
+3. If the screener is on: `python screener.py --no-ai` — confirm `<today>_選股.md` appears under `archive/` (news gate skipped in this test).
+4. `python brief.py --no-push` — confirm charts, health-check and the brief appear
    under `archive/`; if AI is enabled, check the market digest section actually has
    content (empty usually means the CLI isn't logged in).
-4. `python brief.py` — full run; confirm text and images arrive on Telegram.
+5. `python brief.py` — full run; confirm text and images arrive on Telegram.
 
 ## Step 3 — Schedule the daily run
 
@@ -107,7 +126,8 @@ run `brief.py`; the AI is invoked only for the one step that needs judgement.
 
 ## Step 4 — Wrap up
 
-- Read the final settings back to the user (market / AI on-off / source list / watchlist / indicators / time / storage).
+- Read the final settings back to the user (market / AI on-off / source list / watchlist / indicators / time / storage / screener on-off).
+- If the screener is on: remind them `data/` holds the big-holder history (the official site keeps only 51 weeks — it can't be re-downloaded later), so back it up.
 - Tell them how to change things later: edit `config.yaml` directly, or re-run this interview.
 - Point them at the logs: `last_run.log` (last run, full output) and `run_history.log` (accumulated).
 - Remind them: this tool aggregates public information, it is **not investment advice**, and it never places trades.

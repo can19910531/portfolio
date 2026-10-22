@@ -24,6 +24,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -65,6 +66,9 @@ def load_config() -> dict:
     ai.setdefault("verify", True)
     ai.setdefault("sources", [])
     cfg["ai"] = ai
+    sc = cfg.setdefault("screener", {}) or {}
+    sc.setdefault("enabled", False)
+    cfg["screener"] = sc
     return cfg
 
 
@@ -384,7 +388,9 @@ def load_health(day: str) -> str:
     return ""
 
 
-def build_brief(day: str, weekday: int, notes: str | None, health: str) -> str:
+def build_brief(day: str, weekday: int, notes: str | None, health: str,
+                picks: str = "") -> str:
+    """picks：週末才有的「本週選股觀察」段落（screener.py 產出），放在健檢之後"""
     holiday = weekday >= 5
     fallback = FALLBACK_AUTH if _auth_failed else FALLBACK_NOTES
     title = f"# 📈 股票晨報 {day}（週{WEEKDAY_ZH[weekday]}）" + ("（假日版）" if holiday else "")
@@ -397,10 +403,63 @@ def build_brief(day: str, weekday: int, notes: str | None, health: str) -> str:
         section,
         notes or fallback, hint, "",
         health.strip() or "（今日健檢產出失敗，請查 run_history.log）", "",
+        *([picks.strip(), ""] if picks else []),
         "（K線圖隨後送達 📊）", "",
         "---",
         "📌 本簡報為 AI 自動彙整之公開資訊，僅供參考，**非投資建議**。", "",
     ])
+
+
+# ── 週末：每週選股（週六跑；週六沒跑成，週日補跑）⚠️ 只支援台股 ─────────────
+PICKS_FAIL = ("## 🎯 本週選股觀察\n"
+              "- ⚠️ 本週選股產出失敗，原因記在 `run_history.log`（週日會自動補跑一次）")
+SCORECARD = HERE / "research" / "results_weekly.json"
+SCORECARD_MAX_DAYS = 30      # 成績單超過一個月就重跑回測（樣本外期間會跟著變長）
+
+
+def _run_py(script: str, args: list[str], timeout: int) -> bool:
+    try:
+        p = subprocess.run([sys.executable, str(HERE / script), *args],
+                           cwd=str(HERE), capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        log(f"X {script} 逾時（>{timeout}s）")
+        return False
+    if p.returncode != 0:
+        log(f"X {script} 失敗（exit {p.returncode}）：{((p.stderr or '') + (p.stdout or ''))[-500:]}")
+        return False
+    tail = (p.stdout or "").strip().splitlines()
+    log(f"OK {script}｜{tail[-1] if tail else ''}")
+    return True
+
+
+def picks_due(day: str, weekday: int) -> bool:
+    if not CFG["screener"]["enabled"] or str(CFG["market"]).lower() not in ("tw", "both"):
+        return False
+    if weekday == 5:
+        return True
+    if weekday == 6:
+        sat = (date.fromisoformat(day) - timedelta(days=1)).isoformat()
+        return not (ARCHIVE / f"{sat}_選股.md").exists()
+    return False
+
+
+def run_picks(day: str, no_ai: bool) -> str | None:
+    """先存本週大戶持股（集保官網只留 51 週，不存就沒了），再跑選股。失敗回 None"""
+    log("→ 週末步驟：存本週 400 張大戶持股")
+    _run_py("big_holders.py", [], 600)
+    log("→ 週末步驟：每週選股")
+    ok = _run_py("screener.py", ["--date", day] + (["--no-ai"] if no_ai else []), 3600)
+    f = ARCHIVE / f"{day}_選股.md"
+    return f.read_text(encoding="utf-8") if ok and f.exists() else None
+
+
+def refresh_scorecard():
+    """推播完才做：成績單過期就重跑回測（約 5～10 分鐘，會下載全市場 10 年資料）"""
+    age = (time.time() - SCORECARD.stat().st_mtime) / 86400 if SCORECARD.exists() else 999
+    if age > SCORECARD_MAX_DAYS:
+        log(f"→ 成績單已 {age:.0f} 天，重跑回測更新")
+        _run_py("research/run_research.py", [], 3600)
 
 
 # ── 步驟 4：歸檔＋推播 ────────────────────────────────────────────────
@@ -470,7 +529,9 @@ def main() -> int:
 
         brief_file = ARCHIVE / f"{day}_晨報.md"
         brief_file.parent.mkdir(parents=True, exist_ok=True)
-        brief_file.write_text(build_brief(day, weekday, notes, health), encoding="utf-8")
+        weekend = picks_due(day, weekday)
+        picks = (run_picks(day, a.no_ai) or PICKS_FAIL) if weekend else ""
+        brief_file.write_text(build_brief(day, weekday, notes, health, picks), encoding="utf-8")
         log(f"OK 步驟3：簡報已存 {brief_file.name}")
 
         if a.no_push:
@@ -491,6 +552,9 @@ def main() -> int:
         checks = [("畫圖", ok_charts), ("文字推播", ok_text), ("圖表推播", ok_photo)]
         if use_ai:
             checks.append(("市場重點", notes is not None))
+        if weekend:
+            checks.append(("每週選股", picks != PICKS_FAIL))
+            refresh_scorecard()
         bad = [n for n, ok in checks if not ok]
         log(f"⚠ 晨報完成但有缺項：{'、'.join(bad)}" if bad else "✅ 晨報全部完成")
         log("===== 晨報結束 =====")
