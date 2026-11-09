@@ -155,6 +155,7 @@ https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief
 | **跟直接抱 0050 比** | ❌ **整體報酬輸，回撤約兩倍**（2023 起年化約 +35% vs +47%，最大回撤約 −41% vs −20%） |
 | 「加上 5 週線、MACD 0 軸上、KD≥70 勝率比較高」 | ❌ 未獲支持：勝率差距在 ±2 個百分點內——因為 93% 的 52 週新高訊號本來就符合 |
 | 勝率 | 約四成，**一半以上的單會停損**；賺錢靠少數抱數個月的大漲股 |
+| 「400 張大戶有增加」 | 🟡 只有一年資料的初步分析：只要增加一點點（>0）幾乎沒差；增加 **超過 0.5 個百分點**的那群 13 週後明顯較好 → 門檻改成 >0.5（[`results_big_holders.md`](research/results_big_holders.md)） |
 
 台積電領漲的市場裡，挑股策略很難追上市值加權的 0050。所以成績單每週都附「輸給 0050」那一行——
 這份名單的定位是「幫你從 200 檔縮小範圍」，不是取代核心持股。
@@ -199,7 +200,9 @@ https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief
 ├── research/
 │   ├── pre_registration.md   # 事先登記：看結果之前就寫好要測什麼、怎樣算過關
 │   ├── run_research.py       # 照登記跑 21 組週線參數、樣本外驗收
-│   └── results_weekly.md     # 研究結果（含跟 0050 的比較）
+│   ├── results_weekly.md     # 研究結果（含跟 0050 的比較）
+│   ├── big_holder_analysis.py # 400 張大戶增加分析（修訂二；資料滿兩年再重跑）
+│   └── results_big_holders.md # 大戶分析結果（初步參考）
 └── docs/
     ├── 初始設定任務書.md       # AI 安裝訪談腳本（中文）
     ├── SETUP_AGENT.md         # 同上（English）

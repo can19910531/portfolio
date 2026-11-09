@@ -4,7 +4,8 @@ screener.py — 每週選股觀察名單（週線長線；brief.py 週六呼叫�
 三道關卡，全過才列出（寧缺勿濫）：
     ① 技術面（已回測，見 research/results_weekly.md）
          週收創 52 週新高 ＋ 週收 > 40 週線 ＋ 站上 5 週線、週 MACD 快線 > 0、週 K ≥ 70
-    ② 籌碼面（未經回測驗證）：400 張以上大戶持股比例比上一週增加
+    ② 籌碼面（初步分析，未長期驗證）：400 張以上大戶持股比例比上一週增加超過 0.5 個百分點
+       （依 research/results_big_holders.md 由「>0」提高；增加 0～0.5 的那群反而落後）
     ③ 新聞面（未經回測驗證）：AI 查近兩週白名單來源新聞，有明確利空就剔除
 
 另外：
@@ -47,6 +48,7 @@ TOP_N = int(SC.get("top_n", 200))
 MAX_MAIN = int(SC.get("max_main", 5))
 MAX_LOTTERY = int(SC.get("max_lottery", 3)) if SC.get("lottery", True) else 0
 TRIGGER = 52                            # 創 52 週新高（回測選出的規則）
+CHIP_MIN = 0.5                          # 大戶關門檻（百分點）：Δ > 0.5 才過（research/pre_registration.md 修訂二）
 EXIT_MA = {"主": 20, "樂透": 10}      # 出場線：與回測一致（主＝跌破 20 週線、樂透＝跌破 10 週線）
 TWSE_DAY = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
 TPEX_DAY = "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes"
@@ -91,7 +93,8 @@ def watchlist_etf_constituents() -> set:
 def load_track() -> pd.DataFrame:
     cols = ["listed", "code", "name", "section", "ref_close", "stop", "status", "closed", "note"]
     if TRACK.exists():
-        return pd.read_csv(TRACK, dtype={"code": str, "listed": str, "closed": str}).reindex(columns=cols)
+        # 文字欄一律指定 str：note 過去全空會被讀成 float，第一次寫「觸及停損」就當掉
+        return pd.read_csv(TRACK, dtype={c: str for c in ("listed", "code", "name", "section", "status", "closed", "note")}).reindex(columns=cols)
     return pd.DataFrame(columns=cols)
 
 
@@ -208,7 +211,7 @@ def scorecard_lines() -> list[str]:
             f"每筆比同期大型股平均多 {o['excess']:+.1%}（統計上確立）",
             f"- ⚠️ 但整體輸給直接抱 0050：組合年化 {p['strat']['cagr']:+.0%} vs 0050 "
             f"{p['hold']['cagr']:+.0%}，最大回撤 {p['strat']['mdd']:.0%} vs {p['hold']['mdd']:.0%}",
-            "- 大戶、新聞兩關：未經回測驗證",
+            f"- 大戶關（增加 > {CHIP_MIN} 個百分點）：只有一年資料的初步分析；新聞關：未經回測驗證",
         ]
     except Exception:
         return ["- （成績單讀取失敗，見 research/results_weekly.md）"]
@@ -263,7 +266,7 @@ def main() -> int:
     chips, chip_week = chip_table(sorted({c for codes in tech.values() for c in codes}))
     funnel, passed_chip = {}, {}
     for sec, codes in tech.items():
-        ok = [c for c in codes if c in chips and pd.notna(chips[c][1]) and chips[c][1] > 0]
+        ok = [c for c in codes if c in chips and pd.notna(chips[c][1]) and chips[c][1] > CHIP_MIN]
         passed_chip[sec] = sorted(ok, key=lambda c: -rs.get(c, 0))
         funnel[sec] = [len(codes), len(ok)]
 
@@ -342,7 +345,7 @@ def main() -> int:
         if title:
             out += [title, ""]
         t, ch, nw = (funnel[sec] + [0, 0, 0])[:3]
-        out.append(f"_篩選：技術面 {t} 檔 → 大戶增加 {ch} 檔 → "
+        out.append(f"_篩選：技術面 {t} 檔 → 大戶增加>{CHIP_MIN} {ch} 檔 → "
                    + (f"新聞無利空 {nw} 檔_" if use_ai else "新聞關未啟用_"))
         if news_failed and passed_chip[sec]:
             out.append(f"- 新聞檢查失敗，依寧缺勿濫不列入（技術＋大戶通過："
