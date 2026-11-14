@@ -221,7 +221,10 @@ https://raw.githubusercontent.com/can19910531/portfolio/main/stock-morning-brief
 <summary>❓ 常見問題</summary>
 
 **電腦關機的話晨報會不會漏掉？**
-會。排程需要電腦開著且在登入狀態。Windows 版有設定「錯過時間會在開機後自動補跑」，所以晚開機還是收得到，只是時間晚一點。
+會。排程需要電腦開著且在登入狀態。Windows 版除了每天定時，還掛了「登入電腦時」觸發：今天還沒跑、且已過推播時間，登入後 1 分鐘就自動補跑（跑過就不重跑）。這是為了 Windows 更新半夜重開機後停在登入畫面的情況——那時定時那次會整個錯過，光靠「錯過時間自動補跑」也補不回來。
+
+**AI 市場重點有時候整段缺掉，顯示「未登入或登入已過期」？**
+一般 `claude login` 大約每個月會過期一次。改用一年期憑證：在終端機跑 `claude setup-token`，把產生的 `sk-ant-` 開頭那串放進 `.env` 的 `CLAUDE_CODE_OAUTH_TOKEN=`（可再加一行 `CLAUDE_TOKEN_SET=設定日期`，到期前 30 天晨報會提醒）。憑證很長，終端機會把它折成兩行，複製時中間帶到空格也沒關係，程式會自動去掉。憑證只在晨報呼叫 AI 時帶上，**不要設成系統環境變數**，以免蓋掉你平常互動用的 Claude 登入。
 
 **我的持股資料會外流嗎？**
 不會。自選股清單存在你電腦上的 `config.yaml`（已 gitignore），行情從 Yahoo Finance 公開資料抓，全程在你自己的電腦上跑。AI 呼叫只授予網搜權限（`--allowedTools WebSearch,WebFetch`），碰不到你的檔案。
@@ -306,7 +309,7 @@ Python 沒裝或版本太舊 → 引導使用者到 python.org 安裝（Windows 
 
 1. **市場** — 台股 `tw` / 美股 `us` / 兩個都要 `both`
 2. **要不要「AI 市場重點」段** — 需要使用者電腦上有會網搜的 AI CLI 並已登入。
-   選要 → 確認 CLI 跑得動（`claude --version`），把指令或完整路徑寫進 `ai.cli`；沒登入要提醒登入一次（例如 `claude login`）。選不要 → 跳過第 3 題
+   選要 → 確認 CLI 跑得動（`claude --version`），把指令或完整路徑寫進 `ai.cli`；沒登入要提醒登入一次（例如 `claude login`）；用 Claude 的話建議直接改用 `claude setup-token` 一年期憑證寫進 `.env` 的 `CLAUDE_CODE_OAUTH_TOKEN`（一般登入約每月過期一次）。選不要 → 跳過第 3 題
 3. **新聞來源** — ⚠️ **一定要主動把預設清單列出來給使用者看，再問要不要增補**。
    不要只問「你要哪些來源」，使用者面對空白通常答不出來，看到清單才有感覺。
    預設清單見 `config.example.yaml` 的 `ai.sources`。要順便解釋**為什麼要限制**：

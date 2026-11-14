@@ -12,11 +12,15 @@ brief.py — 晨報主流程（無人值守，由系統排程器每天叫起）
     python brief.py --no-verify          # 跳過查核 pass（省一次 AI 呼叫）
     python brief.py --no-push            # 不推播、不上雲端（本機測試）
     python brief.py --force              # 忽略 lock 檔強制執行
+    python brief.py --auto --auto-earliest 08:07
+                                         # 排程用：今天已跑過、或還沒到指定時間就安靜結束
 
 前提：
     1. config.yaml 已設定（或讓 AI 讀 docs/初始設定任務書.md 幫你產生）
     2. .env 內有 TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
     3. 想要「市場重點」段：需安裝並登入一個會網搜的 AI CLI（預設 claude）
+       建議用 `claude setup-token` 產生一年期憑證放進 .env（CLAUDE_CODE_OAUTH_TOKEN），
+       一般 `claude login` 大約每個月會過期一次，過期那天市場重點就會缺
 
 流程與模板的完整說明見 docs/每日晨報任務書.md。
 """
@@ -31,6 +35,32 @@ from pathlib import Path
 import yaml
 
 HERE = Path(__file__).parent
+
+
+def _auto_should_skip() -> bool:
+    """排程以 --auto 執行時：今天已經跑過、或還沒到 --auto-earliest 指定時間 → 安靜結束。
+    排程同時掛「每天定時」與「登入電腦時」兩個觸發：Windows 更新半夜重開機後會停在登入畫面，
+    定時那次整個錯過，登入後也不會自己補（StartWhenAvailable 只在排程服務啟動時檢查，那時還沒人登入）。
+    這段判斷要放在把輸出導進 last_run.log 之前，否則每次登入都會洗掉上一次的除錯紀錄。"""
+    now = datetime.now()
+    earliest = (8, 0)
+    if "--auto-earliest" in sys.argv:
+        try:
+            hh, mm = sys.argv[sys.argv.index("--auto-earliest") + 1].split(":")
+            earliest = (int(hh), int(mm))
+        except (IndexError, ValueError):
+            pass
+    if (now.hour, now.minute) < earliest:
+        return True
+    try:
+        mark = f"===== 晨報開始 {now.date().isoformat()}"
+        return mark in (HERE / "run_history.log").read_text(encoding="utf-8", errors="replace")
+    except FileNotFoundError:
+        return False
+
+
+if "--auto" in sys.argv and _auto_should_skip():
+    sys.exit(0)
 
 # 排程可用 pythonw.exe 執行（Windows 上完全無視窗），此時 sys.stdout 是 None，
 # print 會直接爆掉 → 把整段輸出導進 last_run.log（每次覆寫），除錯看這支就好。
@@ -47,6 +77,36 @@ AI_TIMEOUT = 900       # 單次 AI 呼叫上限（秒）
 DRAW_TIMEOUT = 900     # charts.py 上限（秒）
 
 WEEKDAY_ZH = "一二三四五六日"
+TOKEN_DAYS = 365          # claude setup-token 的憑證效期（官方：一年）
+TOKEN_WARN_DAYS = 30      # 到期前幾天開始在晨報提醒
+
+
+def load_env() -> dict:
+    env = {}
+    f = HERE / ".env"
+    if f.exists():
+        for line in f.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip()
+    return env
+
+
+def token_notice() -> str:
+    """.env 有填 CLAUDE_TOKEN_SET（設定日期）時，一年期憑證快到期就在晨報裡提醒"""
+    set_on = load_env().get("CLAUDE_TOKEN_SET", "")
+    if not set_on:
+        return ""
+    try:
+        left = (date.fromisoformat(set_on) + timedelta(days=TOKEN_DAYS) - date.today()).days
+    except ValueError:
+        return ""
+    if left > TOKEN_WARN_DAYS:
+        return ""
+    when = f"還剩 {left} 天" if left > 0 else "已到期"
+    return (f"- 🔑 Claude 一年期憑證{when}（{set_on} 設定）：請重跑 `claude setup-token`，"
+            f"把新憑證更新到 .env 的 CLAUDE_CODE_OAUTH_TOKEN 與 CLAUDE_TOKEN_SET")
 
 
 def load_config() -> dict:
@@ -258,11 +318,18 @@ def run_ai(prompt: str, what: str) -> str | None:
         "--no-session-persistence",               # 不寫 session 檔＝不留對話紀錄
         "--append-system-prompt", AI_SYSTEM,
     ]
+    # 一年期憑證：.env 有 CLAUDE_CODE_OAUTH_TOKEN 就只放進這個子程序。
+    # 不要設成系統環境變數——會蓋掉你平常互動用的 Claude 登入。
+    # 憑證比終端機寬，複製時常被折行成「中間帶空格」，帶空格的憑證會被當成沒登入 → 一律去掉空白
+    env = os.environ.copy()
+    tok = "".join(load_env().get("CLAUDE_CODE_OAUTH_TOKEN", "").split())
+    if tok:
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = tok
     try:
         p = subprocess.run(
             cmd, cwd=str(HERE), stdin=subprocess.DEVNULL,
             capture_output=True, text=True, encoding="utf-8",
-            errors="replace", timeout=AI_TIMEOUT)
+            errors="replace", timeout=AI_TIMEOUT, env=env)
     except FileNotFoundError:
         log(f"X 找不到 AI CLI「{ai['cli']}」——請確認已安裝，或改 config.yaml 的 ai.cli")
         _auth_failed = True
@@ -357,7 +424,8 @@ FALLBACK_NOTES = (
 )
 FALLBACK_AUTH = (
     "- ⚠️ 今日市場重點蒐集失敗：**AI CLI 未登入或登入已過期**\n"
-    "- 請在終端機重新登入你的 AI CLI（例如 `claude login`）即可恢復\n"
+    "- 請在終端機重新登入你的 AI CLI（例如 `claude login`）即可恢復；"
+    "Claude 建議改用 `claude setup-token` 一年期憑證（放進 .env），就不會每個月斷一次\n"
     "- 以下健檢與技術圖表不受影響"
 )
 
@@ -404,6 +472,7 @@ def build_brief(day: str, weekday: int, notes: str | None, health: str,
         notes or fallback, hint, "",
         health.strip() or "（今日健檢產出失敗，請查 run_history.log）", "",
         *([picks.strip(), ""] if picks else []),
+        *([token_notice(), ""] if token_notice() else []),
         "（K線圖隨後送達 📊）", "",
         "---",
         "📌 本簡報為 AI 自動彙整之公開資訊，僅供參考，**非投資建議**。", "",
@@ -510,6 +579,9 @@ def main() -> int:
     ap.add_argument("--no-verify", action="store_true", help="跳過查核 pass")
     ap.add_argument("--no-push", action="store_true", help="不推播、不上雲端")
     ap.add_argument("--force", action="store_true", help="忽略 lock 強制執行")
+    ap.add_argument("--auto", action="store_true",
+                    help="排程用：今天已跑過或未到 --auto-earliest 就不跑（定時＋登入時補跑共用）")
+    ap.add_argument("--auto-earliest", default="08:00", help="--auto 的最早執行時間 HH:MM")
     a = ap.parse_args()
 
     day = a.date

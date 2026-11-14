@@ -44,8 +44,14 @@ if (-not $At) {
 if (-not $At) { $At = "08:07" }
 # 小提醒：整點（:00）是所有人排程的尖峰，錯開幾分鐘比較不會塞車
 
-$action = New-ScheduledTaskAction -Execute $Pythonw -Argument "`"$Script`"" -WorkingDirectory $ProjectDir
-$trigger = New-ScheduledTaskTrigger -Daily -At $At
+# --auto：今天已跑過、或還沒到 $At 就安靜結束（兩個觸發共用同一個動作）
+$action = New-ScheduledTaskAction -Execute $Pythonw -Argument "`"$Script`" --auto --auto-earliest $At" -WorkingDirectory $ProjectDir
+# 另加「登入電腦時」觸發：Windows 更新半夜重開機後停在登入畫面，定時那次會整個錯過、
+# 登入後也不會自己補；有了這個，登入後 1 分鐘自動補跑（今天跑過就不重跑）
+$daily = New-ScheduledTaskTrigger -Daily -At $At
+$logon = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+$logon.Delay = "PT1M"   # 等網路連上
+$trigger = @($daily, $logon)
 
 $settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -63,7 +69,7 @@ $principal = New-ScheduledTaskPrincipal `
 
 Register-ScheduledTask -TaskName $TaskName `
     -Action $action -Trigger $trigger -Settings $settings -Principal $principal `
-    -Description "股票晨報：每天 $At 產出簡報＋K線圖並推 Telegram。無人值守，不開對話、不問權限。主腳本 $Script" `
+    -Description "股票晨報：每天 $At 產出簡報＋K線圖並推 Telegram（登入電腦時若今天還沒跑會自動補跑）。無人值守，不開對話、不問權限。主腳本 $Script" `
     -Force | Out-Null
 
 $info = Get-ScheduledTaskInfo -TaskName $TaskName
